@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mesut - HelloBase Mini dApp</title>
+
+  <!-- Ethers.js (v5) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+    h1 {
+      font-size: 20px;
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: #38bdf8;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 16px;
+    }
+    button {
+      background: #2563eb;
+      border: none;
+      border-radius: 999px;
+      color: white;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    button:disabled {
+      background: #4b5563;
+      cursor: not-allowed;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .label {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .value-box {
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      padding: 12px;
+      background: #020617;
+      font-size: 13px;
+      word-break: break-all;
+      min-height: 40px;
+    }
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 13px;
+      outline: none;
+    }
+    input:focus {
+      border-color: #38bdf8;
+    }
+    .status {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+      min-height: 16px;
+    }
+    .small {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      padding: 2px 8px;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="row">
+      <div>
+        <h1>HelloBase Mini dApp</h1>
+        <div class="subtitle">Mesut’un Base üzerindeki kontratı ile etkileşim 🚀</div>
+      </div>
+      <button id="connectButton">Cüzdanı Bağla</button>
+    </div>
+
+    <div class="label">Bağlı Ağ / Cüzdan</div>
+    <div class="value-box" id="walletInfo">Bağlı değil</div>
+
+    <div class="label" style="margin-top:12px;">Kontrat Adresi</div>
+    <div class="value-box">
+      0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8
+    </div>
+
+    <div class="row" style="margin-top:16px;">
+      <div class="label">Aktif Mesaj (message)</div>
+      <button id="refreshMessageButton">Yenile</button>
+    </div>
+    <div class="value-box" id="currentMessage">-</div>
+
+    <div class="label" style="margin-top:16px;">Yeni Mesaj Yaz</div>
+    <input id="newMessageInput" placeholder="Örn: Merhaba Base from Mesut" />
+    <div class="row" style="margin-top:8px;">
+      <div class="status" id="txStatus"></div>
+      <button id="setMessageButton" disabled>Mesajı Güncelle</button>
+    </div>
+
+    <div class="small">
+      <span class="tag">Not</span> MetaMask’te, kontratı hangi ağda deploy ettiysen (Base Mainnet veya Base Sepolia), o ağı seçmeyi unutma.
+    </div>
+  </div>
+
+  <script>
+    const ethers = window.ethers;
+
+    // Senin kontrat adresin
+    const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
+
+    // HelloBase ABI
+    const CONTRACT_ABI = [
+      {
+        "inputs": [],
+        "name": "message",
+        "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{ "internalType": "string", "name": "newMessage", "type": "string" }],
+        "name": "setMessage",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+
+    let provider;
+    let signer;
+    let contract;
+
+    const connectButton = document.getElementById("connectButton");
+    const walletInfo = document.getElementById("walletInfo");
+    const currentMessageEl = document.getElementById("currentMessage");
+    const refreshMessageButton = document.getElementById("refreshMessageButton");
+    const newMessageInput = document.getElementById("newMessageInput");
+    const setMessageButton = document.getElementById("setMessageButton");
+    const txStatus = document.getElementById("txStatus");
+
+    async function connectWallet() {
+      if (!window.ethereum) {
+        alert("MetaMask bulunamadı. Lütfen Chrome eklentisinin kurulu olduğundan emin ol.");
+        return;
+      }
+
+      try {
+        // 1) Hesap iste
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+
+        // 2) Provider & signer
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+
+        // 3) Ağ bilgisi
+        const network = await provider.getNetwork();
+
+        // 4) Kontrata bağlan
+        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        walletInfo.textContent = `Ağ chainId: ${network.chainId} | Cüzdan: ${accounts[0]}`;
+        connectButton.textContent = "Bağlı";
+        setMessageButton.disabled = false;
+
+        await readMessage();
+      } catch (e) {
+        console.error(e);
+        alert("Cüzdan bağlanırken hata oluştu: " + (e.message || e));
+      }
+    }
+
+    async function readMessage() {
+      if (!contract) {
+        currentMessageEl.textContent = "Kontrat bağlı değil.";
+        return;
+      }
+      try {
+        currentMessageEl.textContent = "Yükleniyor...";
+        const msg = await contract.message();
+        currentMessageEl.textContent = msg || "(Boş)";
+      } catch (e) {
+        console.error(e);
+        currentMessageEl.textContent = "Mesaj okunurken hata.";
+      }
+    }
+
+    async function setMessage() {
+      if (!contract) {
+        alert("Önce cüzdanı bağlamalısın.");
+        return;
+      }
+      const text = newMessageInput.value.trim();
+      if (!text) {
+        alert("Lütfen bir mesaj yaz.");
+        return;
+      }
+
+      try {
+        txStatus.textContent = "İşlem gönderiliyor...";
+        setMessageButton.disabled = true;
+
+        const tx = await contract.setMessage(text);
+        txStatus.textContent = "Onay bekleniyor...";
+
+        await tx.wait();
+
+        txStatus.textContent = "İşlem onaylandı ✅";
+        await readMessage();
+        setTimeout(() => (txStatus.textContent = ""), 4000);
+      } catch (e) {
+        console.error(e);
+        txStatus.textContent = "İşlem hatası: " + (e.message || e);
+      } finally {
+        setMessageButton.disabled = false;
+      }
+    }
+
+    connectButton.addEventListener("click", connectWallet);
+    refreshMessageButton.addEventListener("click", readMessage);
+    setMessageButton.addEventListener("click", setMessage);
+  </script>
+</body>
+</html>
