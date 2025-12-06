@@ -8,139 +8,486 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
   <style>
+    :root {
+      --bg: #020617;
+      --bg-card: #020617;
+      --border: #1e293b;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.15);
+      --text-main: #e5e7eb;
+      --text-sub: #9ca3af;
+      --text-muted: #6b7280;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #020617;
-      color: #e5e7eb;
+      background: radial-gradient(circle at top, #1d4ed8 0, #020617 40%, #000 100%);
+      color: var(--text-main);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       margin: 0;
+      padding: 16px;
     }
-    .card {
-      background: #020617;
-      border: 1px solid #1e293b;
-      border-radius: 16px;
-      padding: 24px;
-      max-width: 420px;
+
+    .shell {
       width: 100%;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      max-width: 960px;
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: 20px;
     }
-    h1 {
-      font-size: 20px;
-      margin-top: 0;
-      margin-bottom: 8px;
-      color: #38bdf8;
+
+    @media (max-width: 768px) {
+      .shell {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
-    .subtitle {
-      font-size: 12px;
-      color: #9ca3af;
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow:
+        0 22px 45px rgba(0, 0, 0, 0.75),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at top left, rgba(59,130,246,0.18) 0, transparent 55%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
       margin-bottom: 16px;
     }
+
+    .logo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .logo-circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14,165,233,0.25);
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0;
+      color: #e0f2fe;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      font-size: 10px;
+      border-radius: 999px;
+      padding: 3px 9px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      color: var(--text-sub);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
     button {
-      background: #2563eb;
+      background: var(--accent);
       border: none;
       border-radius: 999px;
       color: white;
       padding: 8px 16px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
     }
+
     button:hover {
       background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.35);
     }
+
     button:disabled {
       background: #4b5563;
       cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
     }
-    .row {
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      color: var(--text-sub);
+      box-shadow: none;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(30, 64, 175, 0.6);
+      border-color: #3b82f6;
+      color: #e5e7eb;
+    }
+
+    .section {
+      margin-top: 18px;
+    }
+
+    .label-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 6px;
     }
+
     .label {
-      font-size: 12px;
-      color: #9ca3af;
+      font-size: 11px;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
+
     .value-box {
-      border-radius: 12px;
-      border: 1px solid #1e293b;
-      padding: 12px;
-      background: #020617;
-      font-size: 13px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      background: rgba(15, 23, 42, 0.96);
+      font-size: 12px;
       word-break: break-all;
-      min-height: 40px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
-    input {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 10px;
-      border: 1px solid #1e293b;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 13px;
-      outline: none;
+
+    .value-main {
+      font-size: 12px;
+      color: var(--text-main);
+      opacity: 0.9;
     }
-    input:focus {
-      border-color: #38bdf8;
-    }
-    .status {
+
+    .value-sub {
       font-size: 11px;
-      color: #9ca3af;
-      margin-top: 4px;
-      min-height: 16px;
+      color: var(--text-muted);
     }
-    .small {
-      font-size: 11px;
-      color: #6b7280;
-      margin-top: 8px;
-    }
-    .tag {
-      display: inline-block;
+
+    .pill {
       font-size: 10px;
       border-radius: 999px;
-      border: 1px solid #334155;
-      padding: 2px 8px;
-      color: #9ca3af;
+      padding: 3px 7px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      color: var(--text-sub);
+    }
+
+    input {
+      width: 100%;
+      padding: 9px 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.96);
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      transition: all 0.12s ease;
+    }
+
+    input::placeholder {
+      color: #6b7280;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.7);
+    }
+
+    .status {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 4px;
+      min-height: 16px;
+      white-space: pre-line;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    .tag {
+      display: inline-flex;
+      font-size: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      padding: 2px 9px;
+      color: var(--text-sub);
+      margin-right: 6px;
+    }
+
+    .side-card-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .timeline {
+      border-left: 1px solid rgba(51, 65, 85, 0.9);
+      margin-left: 5px;
+      padding-left: 14px;
+      margin-top: 6px;
+    }
+
+    .timeline-item {
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -15px;
+      top: 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+    }
+
+    .timeline-title {
+      font-size: 12px;
+      color: var(--text-main);
+    }
+
+    .timeline-sub {
+      font-size: 11px;
+      color: var(--text-sub);
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="row">
-      <div>
-        <h1>HelloBase Mini dApp</h1>
-        <div class="subtitle">Mesut’un Base üzerindeki kontratı ile etkileşim 🚀</div>
+  <div class="shell">
+    <!-- Ana dApp kartı -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="header-row">
+          <div>
+            <div class="logo-pill">
+              <div class="logo-circle"></div>
+              <span>Base • Onchain Mini dApp</span>
+            </div>
+            <h1>HelloBase Dashboard</h1>
+            <div class="subtitle">
+              Mesut’un Base üzerindeki doğrulanmış kontratıyla cüzdanından direkt etkileşime geç.
+            </div>
+            <div class="badge-row">
+              <div class="badge">Deployed • 0xD6e4…c8F8</div>
+              <div class="badge">Verified on BaseScan</div>
+              <div class="badge">Built by Mesut</div>
+            </div>
+          </div>
+          <div>
+            <button id="connectButton">
+              <span>🔗 Cüzdanı Bağla</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cüzdan / Ağ Bilgisi -->
+        <div class="section">
+          <div class="label-row">
+            <span class="label">Bağlantı durumu</span>
+            <span class="pill">MetaMask • Base</span>
+          </div>
+          <div class="value-box" id="walletInfo">
+            <div class="value-main">Bağlı değil</div>
+          </div>
+        </div>
+
+        <!-- Kontrat Adresi -->
+        <div class="section">
+          <div class="label-row">
+            <span class="label">Kontrat adresi</span>
+            <span class="pill">HelloBase.sol</span>
+          </div>
+          <div class="value-box">
+            <div class="value-main">
+              0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8
+            </div>
+          </div>
+        </div>
+
+        <!-- Mesaj Oku -->
+        <div class="section">
+          <div class="label-row">
+            <span class="label">Aktif mesaj (message)</span>
+            <button class="btn-secondary" id="refreshMessageButton">Yenile</button>
+          </div>
+          <div class="value-box">
+            <div class="value-main" id="currentMessage">-</div>
+          </div>
+        </div>
+
+        <!-- Mesaj Yaz -->
+        <div class="section">
+          <div class="label-row">
+            <span class="label">Yeni mesaj yaz</span>
+          </div>
+          <input id="newMessageInput" placeholder="Örn: Merhaba Base, Mesut buradaydı ✨" />
+          <div class="label-row" style="margin-top: 10px;">
+            <div class="status" id="txStatus"></div>
+            <button id="setMessageButton" disabled>Mesajı Güncelle</button>
+          </div>
+        </div>
+
+        <div class="hint">
+          <span class="tag">İpucu</span>
+          Kontratı hangi ağda deploy ettiysen (Base Mainnet veya Base Sepolia) MetaMask’te o ağı seç.
+          İşlem detayı için MetaMask’teki “View on explorer” linkine tıklayabilirsin.
+        </div>
       </div>
-      <button id="connectButton">Cüzdanı Bağla</button>
     </div>
 
-    <div class="label">Bağlı Ağ / Cüzdan</div>
-    <div class="value-box" id="walletInfo">Bağlı değil</div>
+    <!-- Sağ tarafta küçük info panel -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="side-card-title">Bu mini dApp ne yapıyor?</div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-title">1. Cüzdanını bağlıyorsun</div>
+            <div class="timeline-sub">
+              MetaMask ile Base ağına bağlanıyorsun. dApp, sadece sen onay verdiğinde işlem gönderiyor.
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-title">2. Kontrattaki mesajı okuyor</div>
+            <div class="timeline-sub">
+              HelloBase kontratındaki <code>message()</code> fonksiyonunu çağırıp zincirdeki güncel mesajı gösteriyor.
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-title">3. On-chain mesaj güncelleme</div>
+            <div class="timeline-sub">
+              Yazdığın yeni mesaj, <code>setMessage()</code> ile doğrudan Base üzerindeki kontrata kaydediliyor.
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-title">4. Tüm işlemler BaseScan’de izlenebilir</div>
+            <div class="timeline-sub">
+              Her tx; BaseScan üzerinde kontrat adresi ve senin cüzdanın üzerinden görülebilir.
+            </div>
+          </div>
+        </div>
 
-    <div class="label" style="margin-top:12px;">Kontrat Adresi</div>
-    <div class="value-box">
-      0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8
-    </div>
+        <div class="hint" style="margin-top: 14px;">
+          Bu dApp, Mesut’un Base ekosisteminde builder olarak ilk adımlarını gösterir.  
+          İleride buraya: token, NFT, leaderboard ve daha fazla on-chain özellik ekleyebilirsin. 💙
+        </div>
 
-    <div class="row" style="margin-top:16px;">
-      <div class="label">Aktif Mesaj (message)</div>
-      <button id="refreshMessageButton">Yenile</button>
-    </div>
-    <div class="value-box" id="currentMessage">-</div>
+        <!-- Sosyal Linkler -->
+        <div style="margin-top: 24px;">
+          <div class="side-card-title" style="margin-bottom: 12px;">Sosyal Bağlantılar</div>
 
-    <div class="label" style="margin-top:16px;">Yeni Mesaj Yaz</div>
-    <input id="newMessageInput" placeholder="Örn: Merhaba Base from Mesut" />
-    <div class="row" style="margin-top:8px;">
-      <div class="status" id="txStatus"></div>
-      <button id="setMessageButton" disabled>Mesajı Güncelle</button>
-    </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
 
-    <div class="small">
-      <span class="tag">Not</span> MetaMask’te, kontratı hangi ağda deploy ettiysen (Base Mainnet veya Base Sepolia), o ağı seçmeyi unutma.
+            <!-- Twitter -->
+            <a href="https://x.com/soylebisey" target="_blank"
+               style="
+                 display:flex; align-items:center; gap:10px;
+                 padding:10px 14px; border-radius:12px;
+                 background:rgba(15,23,42,0.85);
+                 border:1px solid rgba(51,65,85,0.7);
+                 text-decoration:none; color:#e5e7eb; font-size:13px;
+                 transition:all .15s ease;
+               "
+               onmouseover="this.style.background='rgba(37,99,235,0.25)'; this.style.borderColor='#3b82f6';"
+               onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.borderColor='rgba(51,65,85,0.7)';">
+              <span style="font-size:17px;">🐦</span>
+              <span>X (Twitter)</span>
+            </a>
+
+            <!-- GitHub -->
+            <a href="https://github.com/Mesut006" target="_blank"
+               style="
+                 display:flex; align-items:center; gap:10px;
+                 padding:10px 14px; border-radius:12px;
+                 background:rgba(15,23,42,0.85);
+                 border:1px solid rgba(51,65,85,0.7);
+                 text-decoration:none; color:#e5e7eb; font-size:13px;
+                 transition:all .15s ease;
+               "
+               onmouseover="this.style.background='rgba(37,99,235,0.25)'; this.style.borderColor='#3b82f6';"
+               onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.borderColor='rgba(51,65,85,0.7)';">
+              <span style="font-size:17px;">🐙</span>
+              <span>GitHub</span>
+            </a>
+
+            <!-- Paragraph -->
+            <a href="https://paragraph.com/@0xf159092ad36e8d0524be07f703866b1866d3d94d" target="_blank"
+               style="
+                 display:flex; align-items:center; gap:10px;
+                 padding:10px 14px; border-radius:12px;
+                 background:rgba(15,23,42,0.85);
+                 border:1px solid rgba(51,65,85,0.7);
+                 text-decoration:none; color:#e5e7eb; font-size:13px;
+                 transition:all .15s ease;
+               "
+               onmouseover="this.style.background='rgba(37,99,235,0.25)'; this.style.borderColor='#3b82f6';"
+               onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.borderColor='rgba(51,65,85,0.7)';">
+              <span style="font-size:17px;">📝</span>
+              <span>Paragraph</span>
+            </a>
+
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -187,19 +534,14 @@
       }
 
       try {
-        // 1) Hesap iste
         const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
+          method: "eth_requestAccounts"
         });
 
-        // 2) Provider & signer
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
-
-        // 3) Ağ bilgisi
         const network = await provider.getNetwork();
 
-        // 4) Kontrata bağlan
         contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
         walletInfo.textContent = `Ağ chainId: ${network.chainId} | Cüzdan: ${accounts[0]}`;
