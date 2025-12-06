@@ -341,6 +341,63 @@
       font-size: 11px;
       color: var(--text-main);
     }
+
+    /* Tx history list */
+    .tx-list {
+      margin-top: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.96);
+      padding: 8px 10px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .tx-empty {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .tx-item {
+      font-size: 11px;
+      color: var(--text-sub);
+      padding: 5px 4px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .tx-item + .tx-item {
+      border-top: 1px solid rgba(30, 41, 59, 0.9);
+      margin-top: 4px;
+    }
+
+    .tx-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tx-hash {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: #e5e7eb;
+    }
+
+    .tx-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .tx-link {
+      text-decoration: none;
+      color: #38bdf8;
+    }
+
+    .tx-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -430,6 +487,17 @@
           <span class="tag">İpucu</span>
           Kontratı hangi ağda deploy ettiysen (Base Mainnet veya Base Sepolia) MetaMask’te o ağı seç.
           İşlem detayı için MetaMask’teki “View on explorer” linkine tıklayabilirsin.
+        </div>
+
+        <!-- İşlem Geçmişi -->
+        <div class="section">
+          <div class="label-row">
+            <span class="label">Bu dApp ile işlem geçmişin</span>
+            <span class="pill">Son 5 işlem</span>
+          </div>
+          <div class="tx-list" id="txList">
+            <div class="tx-empty">Bu dApp üzerinden henüz işlem yapmadın.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -558,6 +626,8 @@
     let provider;
     let signer;
     let contract;
+    let lastNetworkChainId = null;
+    let txHistory = [];
 
     const connectButton = document.getElementById("connectButton");
     const walletInfo = document.getElementById("walletInfo");
@@ -571,6 +641,8 @@
     const walletAvatar = document.getElementById("walletAvatar");
     const walletShortLabel = document.getElementById("walletShortLabel");
 
+    const txList = document.getElementById("txList");
+
     function setWalletVisual(address) {
       if (!address) {
         walletChipContainer.style.display = "none";
@@ -580,7 +652,6 @@
       const short = address.slice(0, 6) + "…" + address.slice(-4);
       const initials = address.slice(2, 4).toUpperCase();
 
-      // Adresten "rastgele" bir renk üret
       const segment = address.slice(2, 6);
       let hue = parseInt(segment, 16);
       if (Number.isNaN(hue)) hue = 210;
@@ -590,6 +661,71 @@
       walletAvatar.style.background = `linear-gradient(135deg, hsl(${hue},80%,60%), hsl(${(hue + 40) % 360},80%,50%))`;
       walletShortLabel.textContent = short;
       walletChipContainer.style.display = "block";
+    }
+
+    function formatTimeAgo(ts) {
+      const diffMs = Date.now() - ts;
+      const sec = Math.floor(diffMs / 1000);
+      if (sec < 60) return "az önce";
+      const min = Math.floor(sec / 60);
+      if (min < 60) return `${min} dk önce`;
+      const hour = Math.floor(min / 60);
+      if (hour < 24) return `${hour} saat önce`;
+      const day = Math.floor(hour / 24);
+      return `${day} gün önce`;
+    }
+
+    function saveTxHistory() {
+      try {
+        localStorage.setItem("helloBaseTxHistory", JSON.stringify(txHistory));
+      } catch (e) {
+        console.warn("Tx history kaydedilemedi:", e);
+      }
+    }
+
+    function loadTxHistory() {
+      try {
+        const raw = localStorage.getItem("helloBaseTxHistory");
+        if (!raw) {
+          txHistory = [];
+        } else {
+          txHistory = JSON.parse(raw) || [];
+        }
+      } catch {
+        txHistory = [];
+      }
+      renderTxHistory();
+    }
+
+    function renderTxHistory() {
+      if (!txList) return;
+      if (!txHistory.length) {
+        txList.innerHTML = '<div class="tx-empty">Bu dApp üzerinden henüz işlem yapmadın.</div>';
+        return;
+      }
+
+      txList.innerHTML = txHistory
+        .map((item) => {
+          const shortHash = item.hash.slice(0, 6) + "…" + item.hash.slice(-4);
+          const timeAgo = formatTimeAgo(item.timestamp);
+          const chain = item.chainId ? `chainId: ${item.chainId}` : "";
+          const explorer = item.explorerUrl
+            ? `<a class="tx-link" href="${item.explorerUrl}" target="_blank">BaseScan</a>`
+            : "";
+
+          return `
+            <div class="tx-item">
+              <div class="tx-row">
+                <span class="tx-hash">${shortHash}</span>
+                <span class="tx-meta">${timeAgo}</span>
+              </div>
+              <div class="tx-meta">
+                ${chain} ${explorer ? "• " + explorer : ""}
+              </div>
+            </div>
+          `;
+        })
+        .join("");
     }
 
     async function connectWallet() {
@@ -606,6 +742,7 @@
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
         const network = await provider.getNetwork();
+        lastNetworkChainId = network.chainId;
 
         contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
@@ -654,10 +791,30 @@
         const tx = await contract.setMessage(text);
         txStatus.textContent = "Onay bekleniyor...";
 
-        await tx.wait();
+        const receipt = await tx.wait();
 
         txStatus.textContent = "İşlem onaylandı ✅";
         await readMessage();
+
+        // Tx history'ye ekle
+        const explorerUrl =
+          lastNetworkChainId === 8453
+            ? `https://basescan.org/tx/${tx.hash}`
+            : lastNetworkChainId === 84532
+            ? `https://sepolia.basescan.org/tx/${tx.hash}`
+            : "";
+
+        txHistory.unshift({
+          hash: tx.hash,
+          timestamp: Date.now(),
+          chainId: lastNetworkChainId,
+          explorerUrl
+        });
+
+        txHistory = txHistory.slice(0, 5); // son 5
+        saveTxHistory();
+        renderTxHistory();
+
         setTimeout(() => (txStatus.textContent = ""), 4000);
       } catch (e) {
         console.error(e);
@@ -670,6 +827,9 @@
     connectButton.addEventListener("click", connectWallet);
     refreshMessageButton.addEventListener("click", readMessage);
     setMessageButton.addEventListener("click", setMessage);
+
+    // Sayfa ilk açıldığında local tx geçmişini yükle
+    loadTxHistory();
   </script>
 </body>
 </html>
