@@ -59,6 +59,7 @@
         0 0 0 1px rgba(15, 23, 42, 0.9);
       position: relative;
       overflow: hidden;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     }
 
     .card::before {
@@ -68,6 +69,14 @@
       background: radial-gradient(circle at top left, rgba(59,130,246,0.18) 0, transparent 55%);
       opacity: 0.6;
       pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 26px 55px rgba(15, 23, 42, 0.95),
+        0 0 0 1px rgba(37, 99, 235, 0.3);
+      border-color: rgba(59,130,246,0.7);
     }
 
     .card-inner {
@@ -146,6 +155,8 @@
       gap: 6px;
       white-space: nowrap;
       transition: all 0.15s ease;
+      position: relative;
+      overflow: hidden;
     }
 
     button:hover {
@@ -172,6 +183,37 @@
       background: rgba(30, 64, 175, 0.6);
       border-color: #3b82f6;
       color: #e5e7eb;
+    }
+
+    /* Button loading spinner */
+    .btn-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-spinner {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(226, 232, 240, 0.7);
+      border-top-color: transparent;
+      display: none;
+      animation: spin 0.7s linear infinite;
+    }
+
+    button.loading .btn-spinner {
+      display: inline-block;
+    }
+
+    button.loading .btn-label {
+      opacity: 0.85;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .section {
@@ -204,6 +246,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
+      transition: border-color 0.15s ease, background 0.15s ease;
     }
 
     .value-main {
@@ -366,11 +409,17 @@
       display: flex;
       flex-direction: column;
       gap: 2px;
+      transition: background 0.15s ease, transform 0.15s ease;
     }
 
     .tx-item + .tx-item {
       border-top: 1px solid rgba(30, 41, 59, 0.9);
       margin-top: 4px;
+    }
+
+    .tx-item:hover {
+      background: rgba(37, 99, 235, 0.16);
+      transform: translateY(-1px);
     }
 
     .tx-row {
@@ -398,6 +447,33 @@
     .tx-link:hover {
       text-decoration: underline;
     }
+
+    /* Shimmer loading effect for message box */
+    .shimmer {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(
+        90deg,
+        rgba(15,23,42,0.96) 0%,
+        rgba(30,64,175,0.7) 50%,
+        rgba(15,23,42,0.96) 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer-move 1.2s ease-in-out infinite;
+    }
+
+    .shimmer .value-main {
+      opacity: 0.65;
+    }
+
+    @keyframes shimmer-move {
+      0% {
+        background-position: -150% 0;
+      }
+      100% {
+        background-position: 150% 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -423,7 +499,7 @@
           </div>
           <div>
             <button id="connectButton">
-              <span>🔗 Cüzdanı Bağla</span>
+              <span class="btn-label">🔗 Cüzdanı Bağla</span>
             </button>
           </div>
         </div>
@@ -466,7 +542,7 @@
             <span class="label">Aktif mesaj (message)</span>
             <button class="btn-secondary" id="refreshMessageButton">Yenile</button>
           </div>
-          <div class="value-box">
+          <div class="value-box" id="currentMessageBox">
             <div class="value-main" id="currentMessage">-</div>
           </div>
         </div>
@@ -479,7 +555,10 @@
           <input id="newMessageInput" placeholder="Örn: Merhaba Base, Mesut buradaydı ✨" />
           <div class="label-row" style="margin-top: 10px;">
             <div class="status" id="txStatus"></div>
-            <button id="setMessageButton" disabled>Mesajı Güncelle</button>
+            <button id="setMessageButton" disabled>
+              <span class="btn-label">Mesajı Güncelle</span>
+              <span class="btn-spinner" aria-hidden="true"></span>
+            </button>
           </div>
         </div>
 
@@ -632,6 +711,7 @@
     const connectButton = document.getElementById("connectButton");
     const walletInfo = document.getElementById("walletInfo");
     const currentMessageEl = document.getElementById("currentMessage");
+    const currentMessageBox = document.getElementById("currentMessageBox");
     const refreshMessageButton = document.getElementById("refreshMessageButton");
     const newMessageInput = document.getElementById("newMessageInput");
     const setMessageButton = document.getElementById("setMessageButton");
@@ -747,7 +827,7 @@
         contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
         walletInfo.textContent = `Ağ chainId: ${network.chainId} | Cüzdan: ${accounts[0]}`;
-        connectButton.textContent = "Bağlı";
+        connectButton.querySelector(".btn-label").textContent = "Bağlı";
         setMessageButton.disabled = false;
 
         setWalletVisual(accounts[0]);
@@ -764,12 +844,15 @@
         return;
       }
       try {
+        if (currentMessageBox) currentMessageBox.classList.add("shimmer");
         currentMessageEl.textContent = "Yükleniyor...";
         const msg = await contract.message();
         currentMessageEl.textContent = msg || "(Boş)";
       } catch (e) {
         console.error(e);
         currentMessageEl.textContent = "Mesaj okunurken hata.";
+      } finally {
+        if (currentMessageBox) currentMessageBox.classList.remove("shimmer");
       }
     }
 
@@ -787,6 +870,7 @@
       try {
         txStatus.textContent = "İşlem gönderiliyor...";
         setMessageButton.disabled = true;
+        setMessageButton.classList.add("loading");
 
         const tx = await contract.setMessage(text);
         txStatus.textContent = "Onay bekleniyor...";
@@ -796,7 +880,6 @@
         txStatus.textContent = "İşlem onaylandı ✅";
         await readMessage();
 
-        // Tx history'ye ekle
         const explorerUrl =
           lastNetworkChainId === 8453
             ? `https://basescan.org/tx/${tx.hash}`
@@ -811,7 +894,7 @@
           explorerUrl
         });
 
-        txHistory = txHistory.slice(0, 5); // son 5
+        txHistory = txHistory.slice(0, 5);
         saveTxHistory();
         renderTxHistory();
 
@@ -821,6 +904,7 @@
         txStatus.textContent = "İşlem hatası: " + (e.message || e);
       } finally {
         setMessageButton.disabled = false;
+        setMessageButton.classList.remove("loading");
       }
     }
 
