@@ -185,7 +185,6 @@
       color: #e5e7eb;
     }
 
-    /* Button loading spinner */
     .btn-label {
       display: inline-flex;
       align-items: center;
@@ -353,7 +352,6 @@
       color: var(--text-sub);
     }
 
-    /* Wallet avatar chip */
     .wallet-chip {
       display: inline-flex;
       align-items: center;
@@ -385,7 +383,6 @@
       color: var(--text-main);
     }
 
-    /* Tx history list */
     .tx-list {
       margin-top: 6px;
       border-radius: 12px;
@@ -448,7 +445,6 @@
       text-decoration: underline;
     }
 
-    /* Shimmer loading effect for message box */
     .shimmer {
       position: relative;
       overflow: hidden;
@@ -475,7 +471,6 @@
       }
     }
 
-    /* Network warning banner */
     .network-warning {
       position: fixed;
       top: 12px;
@@ -752,6 +747,7 @@
     let contract;
     let lastNetworkChainId = null;
     let txHistory = [];
+    let isConnecting = false;
 
     const connectButton = document.getElementById("connectButton");
     const walletInfo = document.getElementById("walletInfo");
@@ -874,12 +870,14 @@
     }
 
     async function connectWallet() {
+      if (isConnecting) return;
       if (!window.ethereum) {
         alert("MetaMask bulunamadı. Lütfen Chrome eklentisinin kurulu olduğundan emin ol.");
         return;
       }
 
       try {
+        isConnecting = true;
         const accounts = await window.ethereum.request({
           method: "eth_requestAccounts"
         });
@@ -902,6 +900,8 @@
       } catch (e) {
         console.error(e);
         alert("Cüzdan bağlanırken hata oluştu: " + (e.message || e));
+      } finally {
+        isConnecting = false;
       }
     }
 
@@ -979,15 +979,7 @@
     refreshMessageButton.addEventListener("click", readMessage);
     setMessageButton.addEventListener("click", setMessage);
 
-    // Sayfa ilk açıldığında local tx geçmişini yükle
     loadTxHistory();
-
-    // Ağ değişince sayfayı yenile (provider/signer bozulmasın)
-    if (window.ethereum) {
-      window.ethereum.on("chainChanged", () => {
-        window.location.reload();
-      });
-    }
   </script>
 </body>
 </html>
