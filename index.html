@@ -309,6 +309,38 @@
       font-size: 11px;
       color: var(--text-sub);
     }
+
+    /* Wallet avatar chip */
+    .wallet-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 8px;
+    }
+
+    .wallet-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #0b1120;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9);
+    }
+
+    .wallet-label {
+      font-size: 11px;
+      color: var(--text-main);
+    }
   </style>
 </head>
 <body>
@@ -347,6 +379,14 @@
           </div>
           <div class="value-box" id="walletInfo">
             <div class="value-main">Bağlı değil</div>
+          </div>
+
+          <!-- Avatar + kısa adres chip -->
+          <div id="walletChipContainer" style="margin-top: 6px; display:none;">
+            <div class="wallet-chip">
+              <div id="walletAvatar" class="wallet-avatar">--</div>
+              <div class="wallet-label" id="walletShortLabel">Cüzdan bağlı değil</div>
+            </div>
           </div>
         </div>
 
@@ -527,6 +567,31 @@
     const setMessageButton = document.getElementById("setMessageButton");
     const txStatus = document.getElementById("txStatus");
 
+    const walletChipContainer = document.getElementById("walletChipContainer");
+    const walletAvatar = document.getElementById("walletAvatar");
+    const walletShortLabel = document.getElementById("walletShortLabel");
+
+    function setWalletVisual(address) {
+      if (!address) {
+        walletChipContainer.style.display = "none";
+        return;
+      }
+
+      const short = address.slice(0, 6) + "…" + address.slice(-4);
+      const initials = address.slice(2, 4).toUpperCase();
+
+      // Adresten "rastgele" bir renk üret
+      const segment = address.slice(2, 6);
+      let hue = parseInt(segment, 16);
+      if (Number.isNaN(hue)) hue = 210;
+      hue = hue % 360;
+
+      walletAvatar.textContent = initials;
+      walletAvatar.style.background = `linear-gradient(135deg, hsl(${hue},80%,60%), hsl(${(hue + 40) % 360},80%,50%))`;
+      walletShortLabel.textContent = short;
+      walletChipContainer.style.display = "block";
+    }
+
     async function connectWallet() {
       if (!window.ethereum) {
         alert("MetaMask bulunamadı. Lütfen Chrome eklentisinin kurulu olduğundan emin ol.");
@@ -548,6 +613,7 @@
         connectButton.textContent = "Bağlı";
         setMessageButton.disabled = false;
 
+        setWalletVisual(accounts[0]);
         await readMessage();
       } catch (e) {
         console.error(e);
