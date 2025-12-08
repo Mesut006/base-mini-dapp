@@ -3,7 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <title>Mesut - HelloBase Mini dApp</title>
-
+  <meta name="fc:miniapp" content='{
+    "version":"next",
+    "imageUrl":"https://mesut006.github.io/base-mini-dapp/og.png",
+    "button":{
+      "title":"Open Mini App",
+      "action":{
+        "type":"launch_miniapp",
+        "name":"HelloBase Mini dApp",
+        "url":"https://mesut006.github.io/base-mini-dapp/"
+      }
+    }
+  }' />
   <!-- Ethers.js (v5) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
@@ -984,3 +995,4 @@
   </script>
 </body>
 </html>
+
