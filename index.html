@@ -510,7 +510,7 @@
   <div id="networkWarning" class="network-warning hidden">
     <div class="network-warning-icon">⚠️</div>
     <div class="network-warning-text" id="networkWarningText">
-      Bu dApp <strong>Base Mainnet (chainId 8453)</strong> için tasarlanmıştır. Lütfen MetaMask’ten doğru ağı seç.
+      This dApp is built for <strong>Base Mainnet (chainId 8453)</strong>. Please select the correct network in your wallet.
     </div>
   </div>
 
@@ -545,7 +545,7 @@
         <div class="section">
           <div class="label-row">
             <span class="label">Bağlantı durumu</span>
-            <span class="pill">MetaMask • Base</span>
+            <span class="pill">EVM Wallet • Base</span>
           </div>
           <div class="value-box" id="walletInfo">
             <div class="value-main">Bağlı değil</div>
@@ -601,8 +601,8 @@
 
         <div class="hint">
           <span class="tag">İpucu</span>
-          Kontratı hangi ağda deploy ettiysen (Base Mainnet veya Base Sepolia) MetaMask’te o ağı seç.
-          İşlem detayı için MetaMask’teki “View on explorer” linkine tıklayabilirsin.
+          Kontratı hangi ağda deploy ettiysen (Base Mainnet veya Base Sepolia) cüzdanında o ağı seç.
+          İşlem detayı için “View on explorer” linki ile BaseScan’e gidebilirsin.
         </div>
 
         <!-- İşlem Geçmişi -->
@@ -626,7 +626,7 @@
           <div class="timeline-item">
             <div class="timeline-title">1. Cüzdanını bağlıyorsun</div>
             <div class="timeline-sub">
-              MetaMask ile Base ağına bağlanıyorsun. dApp, sadece sen onay verdiğinde işlem gönderiyor.
+              Tarayıcı cüzdanınla (MetaMask, Rabby, vb.) Base ağına bağlanıyorsun. dApp, sadece sen onay verdiğinde işlem gönderiyor.
             </div>
           </div>
           <div class="timeline-item">
@@ -660,7 +660,6 @@
 
           <div style="display: flex; flex-direction: column; gap: 10px;">
 
-            <!-- Twitter -->
             <a href="https://x.com/soylebisey" target="_blank"
                style="
                  display:flex; align-items:center; gap:10px;
@@ -676,7 +675,6 @@
               <span>X (Twitter)</span>
             </a>
 
-            <!-- GitHub -->
             <a href="https://github.com/Mesut006" target="_blank"
                style="
                  display:flex; align-items:center; gap:10px;
@@ -692,7 +690,6 @@
               <span>GitHub</span>
             </a>
 
-            <!-- Paragraph -->
             <a href="https://paragraph.com/@0xf159092ad36e8d0524be07f703866b1866d3d94d" target="_blank"
                style="
                  display:flex; align-items:center; gap:10px;
@@ -716,13 +713,12 @@
   </div>
 
   <script>
-      <script>
     const ethers = window.ethers;
 
-    // Target network: Base Mainnet
+    // Bu dApp'in hedef ağı: Base Mainnet
     const EXPECTED_CHAIN_ID = 8453;
 
-    // Your contract address
+    // Senin kontrat adresin
     const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
 
     // HelloBase ABI
@@ -767,29 +763,6 @@
 
     const networkWarning = document.getElementById("networkWarning");
     const networkWarningText = document.getElementById("networkWarningText");
-
-    // ---- Multi-wallet provider seçimi ----
-    function getEvmProvider() {
-      if (!window.ethereum) return null;
-
-      // Bazı tarayıcılarda birden fazla provider olabilir (MetaMask + Coinbase Wallet vs.)
-      const eth = window.ethereum;
-      if (Array.isArray(eth.providers) && eth.providers.length > 0) {
-        const providers = eth.providers;
-
-        const metamask = providers.find((p) => p.isMetaMask);
-        if (metamask) return new ethers.providers.Web3Provider(metamask);
-
-        const coinbase = providers.find((p) => p.isCoinbaseWallet);
-        if (coinbase) return new ethers.providers.Web3Provider(coinbase);
-
-        // İlk bulduğunu kullan (Rabby, OKX, vs.)
-        return new ethers.providers.Web3Provider(providers[0]);
-      }
-
-      // Tek provider varsa (çoğu durumda)
-      return new ethers.providers.Web3Provider(eth);
-    }
 
     function setWalletVisual(address) {
       if (!address) {
@@ -895,22 +868,21 @@
 
     async function connectWallet() {
       if (isConnecting) return;
-
-      const evmProvider = getEvmProvider();
-      if (!evmProvider) {
-        alert("No EVM compatible wallet found. Please install MetaMask, Rabby, Coinbase Wallet or another EVM wallet extension.");
+      if (!window.ethereum) {
+        alert("No EVM compatible wallet found. Please install a browser wallet like MetaMask, Rabby, Coinbase Wallet, etc.");
         return;
       }
 
       try {
         isConnecting = true;
 
-        // EIP-1193 request üzerinden account iste
-        const accounts = await evmProvider.provider.request({
+        // ethers Web3Provider
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        // EIP-1193 üzerinden account iste
+        const accounts = await window.ethereum.request({
           method: "eth_requestAccounts"
         });
 
-        provider = evmProvider;
         signer = provider.getSigner();
         const network = await provider.getNetwork();
         lastNetworkChainId = network.chainId;
@@ -1007,9 +979,8 @@
     refreshMessageButton.addEventListener("click", readMessage);
     setMessageButton.addEventListener("click", setMessage);
 
-    // Load local tx history on first load
+    // İlk yüklemede local tx geçmişini al
     loadTxHistory();
   </script>
 </body>
 </html>
-
