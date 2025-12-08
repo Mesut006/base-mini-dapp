@@ -716,12 +716,13 @@
   </div>
 
   <script>
+      <script>
     const ethers = window.ethers;
 
-    // Bu dApp'in hedef ağı: Base Mainnet
+    // Target network: Base Mainnet
     const EXPECTED_CHAIN_ID = 8453;
 
-    // Senin kontrat adresin
+    // Your contract address
     const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
 
     // HelloBase ABI
@@ -766,6 +767,29 @@
 
     const networkWarning = document.getElementById("networkWarning");
     const networkWarningText = document.getElementById("networkWarningText");
+
+    // ---- Multi-wallet provider seçimi ----
+    function getEvmProvider() {
+      if (!window.ethereum) return null;
+
+      // Bazı tarayıcılarda birden fazla provider olabilir (MetaMask + Coinbase Wallet vs.)
+      const eth = window.ethereum;
+      if (Array.isArray(eth.providers) && eth.providers.length > 0) {
+        const providers = eth.providers;
+
+        const metamask = providers.find((p) => p.isMetaMask);
+        if (metamask) return new ethers.providers.Web3Provider(metamask);
+
+        const coinbase = providers.find((p) => p.isCoinbaseWallet);
+        if (coinbase) return new ethers.providers.Web3Provider(coinbase);
+
+        // İlk bulduğunu kullan (Rabby, OKX, vs.)
+        return new ethers.providers.Web3Provider(providers[0]);
+      }
+
+      // Tek provider varsa (çoğu durumda)
+      return new ethers.providers.Web3Provider(eth);
+    }
 
     function setWalletVisual(address) {
       if (!address) {
@@ -861,9 +885,9 @@
       if (chainId !== EXPECTED_CHAIN_ID) {
         networkWarning.classList.remove("hidden");
         networkWarningText.textContent =
-          `Bu dApp Base Mainnet (chainId 8453) için tasarlanmıştır. ` +
-          `Şu an bağlandığın ağın chainId değeri: ${chainId}. ` +
-          `MetaMask’ten ağı Base Mainnet'e çevirirsen dApp tam fonksiyonel çalışır.`;
+          `This dApp is built for Base Mainnet (chainId 8453). ` +
+          `Current connected chainId: ${chainId}. ` +
+          `Switch to Base Mainnet in your wallet for full functionality.`;
       } else {
         networkWarning.classList.add("hidden");
       }
@@ -871,18 +895,22 @@
 
     async function connectWallet() {
       if (isConnecting) return;
-      if (!window.ethereum) {
-        alert("MetaMask bulunamadı. Lütfen Chrome eklentisinin kurulu olduğundan emin ol.");
+
+      const evmProvider = getEvmProvider();
+      if (!evmProvider) {
+        alert("No EVM compatible wallet found. Please install MetaMask, Rabby, Coinbase Wallet or another EVM wallet extension.");
         return;
       }
 
       try {
         isConnecting = true;
-        const accounts = await window.ethereum.request({
+
+        // EIP-1193 request üzerinden account iste
+        const accounts = await evmProvider.provider.request({
           method: "eth_requestAccounts"
         });
 
-        provider = new ethers.providers.Web3Provider(window.ethereum);
+        provider = evmProvider;
         signer = provider.getSigner();
         const network = await provider.getNetwork();
         lastNetworkChainId = network.chainId;
@@ -979,7 +1007,9 @@
     refreshMessageButton.addEventListener("click", readMessage);
     setMessageButton.addEventListener("click", setMessage);
 
+    // Load local tx history on first load
     loadTxHistory();
   </script>
 </body>
 </html>
+
