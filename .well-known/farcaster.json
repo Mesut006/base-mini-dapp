@@ -12,7 +12,7 @@
  "miniapp": {
     "version": "1",
     "name": "HelloBase Mini dApp",
-    "homeUrl": "https://base-mini-dapp.vercel.app/",
+    "homeUrl": "https://base-mini-dapp.vercel.app/mini-test.html",
     "iconUrl": "https://base-mini-dapp.vercel.app/icon.png",
     "splashImageUrl": "https://base-mini-dapp.vercel.app/og.png",
     "splashBackgroundColor": "#020617",
