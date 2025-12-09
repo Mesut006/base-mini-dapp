@@ -9,26 +9,26 @@
   "baseBuilder": {
     "ownerAddress": "0xF159092AD36E8D0524BE07f703866B1866d3d94D"
   },
-  "miniapp": {
+ "miniapp": {
     "version": "1",
     "name": "HelloBase Mini dApp",
-    "homeUrl": "https://mesut006.github.io/base-mini-dapp/",
-    "iconUrl": "https://mesut006.github.io/base-mini-dapp/icon.png",
-    "splashImageUrl": "https://mesut006.github.io/base-mini-dapp/og.png",
+    "homeUrl": "https://base-mini-dapp.vercel.app/",
+    "iconUrl": "https://base-mini-dapp.vercel.app/icon.png",
+    "splashImageUrl": "https://base-mini-dapp.vercel.app/og.png",
     "splashBackgroundColor": "#020617",
     "webhookUrl": "",
     "subtitle": "Update an onchain message on Base.",
     "description": "A simple onchain app that lets you read and update a message stored in a verified contract on Base.",
     "screenshotUrls": [
-      "https://mesut006.github.io/base-mini-dapp/screenshot.png"
+      "https://base-mini-dapp.vercel.app/screenshot.png"
     ],
     "primaryCategory": "tools",
     "tags": ["base", "miniapp", "onchain", "message"],
-    "heroImageUrl": "https://mesut006.github.io/base-mini-dapp/og.png",
+    "heroImageUrl": "https://base-mini-dapp.vercel.app/og.png",
     "tagline": "Say hi to Base onchain",
     "ogTitle": "HelloBase Mini dApp",
     "ogDescription": "Read and update an onchain message on Base.",
-    "ogImageUrl": "https://mesut006.github.io/base-mini-dapp/og.png",
+    "ogImageUrl": "https://base-mini-dapp.vercel.app/og.png",
     "noindex": false
   }
 }
