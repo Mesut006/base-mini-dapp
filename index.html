@@ -991,7 +991,28 @@
     // İlk yüklemede local tx geçmişini al
     loadTxHistory();
   </script>
+ <script>
+  (function () {
+    function notifyReady() {
+      try {
+        if (window.sdk && window.sdk.actions && window.sdk.actions.ready) {
+          window.sdk.actions.ready();
+          console.log("MiniApp ready() sent");
+        }
+      } catch (e) {
+        console.warn("ready() error", e);
+      }
+    }
+
+    // DOM çizildikten sonra çağır
+    window.addEventListener("load", function () {
+      setTimeout(notifyReady, 100);
+    });
+  })();
+</script>
+
 </body>
 </html>
+
 
 
