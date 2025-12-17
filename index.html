@@ -1007,34 +1007,25 @@
 
     // İlk yüklemede local tx geçmişini al
     loadTxHistory();
-  </script>
- <script>
-  (function () {
-    function notifyReady() {
-      try {
-        if (window.sdk && window.sdk.actions && window.sdk.actions.ready) {
-          window.sdk.actions.ready();
-          console.log("MiniApp ready() sent");
-        }
-      } catch (e) {
-        console.warn("ready() error", e);
+  <script>
+  // Farcaster Mini App: signal "ready" (splash screen should go away)
+  (function readyLoop() {
+    try {
+      if (window.sdk && window.sdk.actions && typeof window.sdk.actions.ready === "function") {
+        window.sdk.actions.ready();
+        console.log("sdk.actions.ready() sent ✅");
+        return;
       }
+    } catch (e) {
+      console.warn("ready() error", e);
     }
-
-    // DOM çizildikten sonra çağır
-    window.addEventListener("load", function () {
-      setTimeout(notifyReady, 100);
-    });
+    setTimeout(readyLoop, 100); // sdk geç gelirse diye tekrar dene
   })();
-<script>
-  // Farcaster Mini App ready signal
-  if (window.FarcasterSDK) {
-    window.FarcasterSDK.actions.ready();
-  }
 </script>
 
 </body>
 </html>
+
 
 
 
