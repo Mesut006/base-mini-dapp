@@ -1026,10 +1026,16 @@
       setTimeout(notifyReady, 100);
     });
   })();
+<script>
+  // Farcaster Mini App ready signal
+  if (window.FarcasterSDK) {
+    window.FarcasterSDK.actions.ready();
+  }
 </script>
 
 </body>
 </html>
+
 
 
 
