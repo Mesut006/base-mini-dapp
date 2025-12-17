@@ -46,29 +46,31 @@
     <p>If you see this, Mini App loaded successfully.</p>
   </div>
 
-  <script>
-    (function waitForSDK() {
-      if (window.sdk && window.sdk.actions && window.sdk.actions.ready) {
-        window.sdk.actions.ready();
-        console.log("Mini App ready() sent ✅");
-      } else {
-        setTimeout(waitForSDK, 100);
+ <script>
+  window.addEventListener("load", () => {
+    // ready() sadece 1 kere çalışsın
+    if (window.__FC_READY_SENT__) return;
+    window.__FC_READY_SENT__ = true;
+
+    function sendReady() {
+      try {
+        if (window.sdk?.actions?.ready) {
+          window.sdk.actions.ready();
+          console.log("sdk.actions.ready() sent ✅");
+          return;
+        }
+      } catch (e) {
+        console.warn("sdk.actions.ready() error", e);
       }
-    })();
-  </script>
-</body>
-  <script>
-  window.addEventListener("load", async () => {
-    try {
-      if (window.sdk?.actions?.ready) {
-        await window.sdk.actions.ready();
-        console.log("sdk.actions.ready() OK");
-      }
-    } catch (e) {
-      console.warn("sdk.actions.ready() error", e);
+      setTimeout(sendReady, 100);
     }
+
+    sendReady();
   });
 </script>
+</body>
+
 </html>
+
 
 
