@@ -1,763 +1,133 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-<script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk/dist/index.min.js"></script>
-  <meta name="fc:miniapp" content='{
-  "version":"1",
-  "imageUrl":"https://base-mini-dapp.vercel.app/og.png",
-  "button":{
-    "title":"Open Mini App",
-    "action":{
-      "type":"launch_miniapp",
-      "name":"HelloBase Mini dApp",
-      "url":"https://base-mini-dapp.vercel.app/"
-    }
-  }
-}' />
+  <meta charset="UTF-8" />
+  <title>HelloBase Mini dApp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- Backward compatibility -->
-<meta name="fc:frame" content='{
-  "version":"1",
-  "imageUrl":"https://base-mini-dapp.vercel.app/og.png",
-  "button":{
-    "title":"Open Mini App",
-    "action":{
-      "type":"launch_miniapp",
-      "name":"HelloBase Mini dApp",
-      "url":"https://base-mini-dapp.vercel.app/"
-    }
-  }
-}' />
-<meta name="fc:miniapp" content="https://base-mini-dapp.vercel.app/.well-known/farcaster.json">
-<meta property="fc:miniapp" content="https://base-mini-dapp.vercel.app/.well-known/farcaster.json">
-  <!-- Ethers.js (v5) -->
+  <!-- ✅ Farcaster Mini App SDK (DOĞRU ve KAPALI TAG) -->
+  <script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk@latest/dist/index.min.js"></script>
+
+  <!-- ✅ Farcaster Mini App Manifest -->
+  <meta
+    property="fc:miniapp"
+    content="https://base-mini-dapp.vercel.app/.well-known/farcaster.json"
+  />
+
+  <!-- Ethers.js v5 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
   <style>
-    :root {
-      --bg: #020617;
-      --bg-card: #020617;
-      --border: #1e293b;
-      --accent: #3b82f6;
-      --accent-soft: rgba(59, 130, 246, 0.15);
-      --text-main: #e5e7eb;
-      --text-sub: #9ca3af;
-      --text-muted: #6b7280;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #1d4ed8 0, #020617 40%, #000 100%);
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
       margin: 0;
-      padding: 16px;
-    }
-
-    .shell {
-      width: 100%;
-      max-width: 960px;
-      display: grid;
-      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-      gap: 20px;
-    }
-
-    @media (max-width: 768px) {
-      .shell {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 22px;
-      box-shadow:
-        0 22px 45px rgba(0, 0, 0, 0.75),
-        0 0 0 1px rgba(15, 23, 42, 0.9);
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background: radial-gradient(circle at top left, rgba(59,130,246,0.18) 0, transparent 55%);
-      opacity: 0.6;
-      pointer-events: none;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow:
-        0 26px 55px rgba(15, 23, 42, 0.95),
-        0 0 0 1px rgba(37, 99, 235, 0.3);
-      border-color: rgba(59,130,246,0.7);
-    }
-
-    .card-inner {
-      position: relative;
-      z-index: 1;
-    }
-
-    .header-row {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1d4ed8 0, #020617 45%, #000 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
       display: flex;
-      justify-content: space-between;
-      gap: 12px;
       align-items: center;
-      margin-bottom: 16px;
+      justify-content: center;
     }
 
-    .logo-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(51, 65, 85, 0.8);
-      font-size: 11px;
-      color: var(--text-sub);
-    }
-
-    .logo-circle {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      background: #0ea5e9;
-      box-shadow: 0 0 0 3px rgba(14,165,233,0.25);
+    .app {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(2, 6, 23, 0.95);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
     }
 
     h1 {
+      margin: 0 0 6px 0;
       font-size: 20px;
-      margin: 0;
       color: #e0f2fe;
-      letter-spacing: 0.02em;
     }
 
-    .subtitle {
-      font-size: 12px;
-      color: var(--text-sub);
-      margin-top: 4px;
-    }
-
-    .badge-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .badge {
-      font-size: 10px;
-      border-radius: 999px;
-      padding: 3px 9px;
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      color: var(--text-sub);
-      background: rgba(15, 23, 42, 0.9);
+    .sub {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 16px;
     }
 
     button {
-      background: var(--accent);
+      width: 100%;
       border: none;
       border-radius: 999px;
-      color: white;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-size: 13px;
+      padding: 10px;
+      font-size: 14px;
       font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      transition: all 0.15s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    button:hover {
-      background: #1d4ed8;
-      transform: translateY(-1px);
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.35);
+      cursor: pointer;
+      background: #3b82f6;
+      color: white;
+      margin-bottom: 12px;
     }
 
     button:disabled {
-      background: #4b5563;
+      opacity: 0.6;
       cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
     }
 
-    .btn-secondary {
+    .box {
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 13px;
       background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      color: var(--text-sub);
-      box-shadow: none;
-    }
-
-    .btn-secondary:hover {
-      background: rgba(30, 64, 175, 0.6);
-      border-color: #3b82f6;
-      color: #e5e7eb;
-    }
-
-    .btn-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-spinner {
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      border: 2px solid rgba(226, 232, 240, 0.7);
-      border-top-color: transparent;
-      display: none;
-      animation: spin 0.7s linear infinite;
-    }
-
-    button.loading .btn-spinner {
-      display: inline-block;
-    }
-
-    button.loading .btn-label {
-      opacity: 0.85;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .section {
-      margin-top: 18px;
-    }
-
-    .label-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .label {
-      font-size: 11px;
-      color: var(--text-sub);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .value-box {
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      padding: 10px 12px;
-      background: rgba(15, 23, 42, 0.96);
-      font-size: 12px;
+      margin-bottom: 10px;
       word-break: break-all;
-      min-height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      transition: border-color 0.15s ease, background 0.15s ease;
-    }
-
-    .value-main {
-      font-size: 12px;
-      color: var(--text-main);
-      opacity: 0.9;
-    }
-
-    .value-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .pill {
-      font-size: 10px;
-      border-radius: 999px;
-      padding: 3px 7px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      color: var(--text-sub);
     }
 
     input {
       width: 100%;
-      padding: 9px 11px;
       border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.96);
-      color: var(--text-main);
-      font-size: 13px;
-      outline: none;
-      transition: all 0.12s ease;
-    }
-
-    input::placeholder {
-      color: #6b7280;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(59,130,246,0.7);
+      border: 1px solid #1e293b;
+      padding: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      font-size: 14px;
+      margin-bottom: 10px;
     }
 
     .status {
-      font-size: 11px;
-      color: var(--text-sub);
-      margin-top: 4px;
+      font-size: 12px;
+      color: #9ca3af;
       min-height: 16px;
-      white-space: pre-line;
-    }
-
-    .hint {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 10px;
-    }
-
-    .tag {
-      display: inline-flex;
-      font-size: 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.8);
-      padding: 2px 9px;
-      color: var(--text-sub);
-      margin-right: 6px;
-    }
-
-    .side-card-title {
-      font-size: 13px;
-      font-weight: 500;
       margin-bottom: 8px;
-    }
-
-    .timeline {
-      border-left: 1px solid rgba(51, 65, 85, 0.9);
-      margin-left: 5px;
-      padding-left: 14px;
-      margin-top: 6px;
-    }
-
-    .timeline-item {
-      margin-bottom: 12px;
-      position: relative;
-    }
-
-    .timeline-item::before {
-      content: "";
-      position: absolute;
-      left: -15px;
-      top: 4px;
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
-    }
-
-    .timeline-title {
-      font-size: 12px;
-      color: var(--text-main);
-    }
-
-    .timeline-sub {
-      font-size: 11px;
-      color: var(--text-sub);
-    }
-
-    .wallet-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      font-size: 11px;
-      color: var(--text-sub);
-      margin-top: 8px;
-    }
-
-    .wallet-avatar {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 600;
-      color: #0b1120;
-      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9);
-    }
-
-    .wallet-label {
-      font-size: 11px;
-      color: var(--text-main);
-    }
-
-    .tx-list {
-      margin-top: 6px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.96);
-      padding: 8px 10px;
-      max-height: 180px;
-      overflow-y: auto;
-    }
-
-    .tx-empty {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .tx-item {
-      font-size: 11px;
-      color: var(--text-sub);
-      padding: 5px 4px;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      transition: background 0.15s ease, transform 0.15s ease;
-    }
-
-    .tx-item + .tx-item {
-      border-top: 1px solid rgba(30, 41, 59, 0.9);
-      margin-top: 4px;
-    }
-
-    .tx-item:hover {
-      background: rgba(37, 99, 235, 0.16);
-      transform: translateY(-1px);
-    }
-
-    .tx-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .tx-hash {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      color: #e5e7eb;
-    }
-
-    .tx-meta {
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-
-    .tx-link {
-      text-decoration: none;
-      color: #38bdf8;
-    }
-
-    .tx-link:hover {
-      text-decoration: underline;
-    }
-
-    .shimmer {
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(
-        90deg,
-        rgba(15,23,42,0.96) 0%,
-        rgba(30,64,175,0.7) 50%,
-        rgba(15,23,42,0.96) 100%
-      );
-      background-size: 200% 100%;
-      animation: shimmer-move 1.2s ease-in-out infinite;
-    }
-
-    .shimmer .value-main {
-      opacity: 0.65;
-    }
-
-    @keyframes shimmer-move {
-      0% {
-        background-position: -150% 0;
-      }
-      100% {
-        background-position: 150% 0;
-      }
-    }
-
-    .network-warning {
-      position: fixed;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      max-width: 960px;
-      width: calc(100% - 32px);
-      border-radius: 14px;
-      border: 1px solid rgba(248, 113, 113, 0.6);
-      background: rgba(127, 29, 29, 0.95);
-      color: #fee2e2;
-      padding: 8px 12px;
-      font-size: 12px;
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      box-shadow: 0 18px 40px rgba(127, 29, 29, 0.7);
-      z-index: 50;
-    }
-
-    .network-warning-icon {
-      font-size: 16px;
-      line-height: 1.2;
-    }
-
-    .network-warning-text strong {
-      color: #fecaca;
-    }
-
-    .hidden {
-      display: none;
     }
   </style>
 </head>
+
 <body>
-  <!-- Yanlış ağ uyarı bandı -->
-  <div id="networkWarning" class="network-warning hidden">
-    <div class="network-warning-icon">⚠️</div>
-    <div class="network-warning-text" id="networkWarningText">
-      This dApp is built for <strong>Base Mainnet (chainId 8453)</strong>. Please select the correct network in your wallet.
-    </div>
-  </div>
+  <div class="app">
+    <h1>HelloBase Mini dApp</h1>
+    <div class="sub">Update an on-chain message on Base</div>
 
-  <div class="shell">
-    <!-- Ana dApp kartı -->
-    <div class="card">
-      <div class="card-inner">
-        <div class="header-row">
-          <div>
-            <div class="logo-pill">
-              <div class="logo-circle"></div>
-              <span>Base • Onchain Mini dApp</span>
-            </div>
-            <h1>HelloBase Dashboard</h1>
-            <div class="subtitle">
-              Mesut’un Base üzerindeki doğrulanmış kontratıyla cüzdanından direkt etkileşime geç.
-            </div>
-            <div class="badge-row">
-              <div class="badge">Deployed • 0xD6e4…c8F8</div>
-              <div class="badge">Verified on BaseScan</div>
-              <div class="badge">Built by Mesut</div>
-            </div>
-          </div>
-          <div>
-            <button id="connectButton">
-              <span class="btn-label">🔗 Cüzdanı Bağla</span>
-            </button>
-          </div>
-        </div>
+    <button id="connectBtn">Connect Wallet</button>
 
-        <!-- Cüzdan / Ağ Bilgisi -->
-        <div class="section">
-          <div class="label-row">
-            <span class="label">Bağlantı durumu</span>
-            <span class="pill">EVM Wallet • Base</span>
-          </div>
-          <div class="value-box" id="walletInfo">
-            <div class="value-main">Bağlı değil</div>
-          </div>
+    <div class="box" id="walletBox">Wallet: not connected</div>
+    <div class="box" id="messageBox">Message: -</div>
 
-          <!-- Avatar + kısa adres chip -->
-          <div id="walletChipContainer" style="margin-top: 6px; display:none;">
-            <div class="wallet-chip">
-              <div id="walletAvatar" class="wallet-avatar">--</div>
-              <div class="wallet-label" id="walletShortLabel">Cüzdan bağlı değil</div>
-            </div>
-          </div>
-        </div>
+    <input id="messageInput" placeholder="New message…" />
+    <button id="sendBtn" disabled>Update Message</button>
 
-        <!-- Kontrat Adresi -->
-        <div class="section">
-          <div class="label-row">
-            <span class="label">Kontrat adresi</span>
-            <span class="pill">HelloBase.sol</span>
-          </div>
-          <div class="value-box">
-            <div class="value-main">
-              0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8
-            </div>
-          </div>
-        </div>
-
-        <!-- Mesaj Oku -->
-        <div class="section">
-          <div class="label-row">
-            <span class="label">Aktif mesaj (message)</span>
-            <button class="btn-secondary" id="refreshMessageButton">Yenile</button>
-          </div>
-          <div class="value-box" id="currentMessageBox">
-            <div class="value-main" id="currentMessage">-</div>
-          </div>
-        </div>
-
-        <!-- Mesaj Yaz -->
-        <div class="section">
-          <div class="label-row">
-            <span class="label">Yeni mesaj yaz</span>
-          </div>
-          <input id="newMessageInput" placeholder="Örn: Merhaba Base, Mesut buradaydı ✨" />
-          <div class="label-row" style="margin-top: 10px;">
-            <div class="status" id="txStatus"></div>
-            <button id="setMessageButton" disabled>
-              <span class="btn-label">Mesajı Güncelle</span>
-              <span class="btn-spinner" aria-hidden="true"></span>
-            </button>
-          </div>
-        </div>
-
-        <div class="hint">
-          <span class="tag">İpucu</span>
-          Kontratı hangi ağda deploy ettiysen (Base Mainnet veya Base Sepolia) cüzdanında o ağı seç.
-          İşlem detayı için “View on explorer” linki ile BaseScan’e gidebilirsin.
-        </div>
-
-        <!-- İşlem Geçmişi -->
-        <div class="section">
-          <div class="label-row">
-            <span class="label">Bu dApp ile işlem geçmişin</span>
-            <span class="pill">Son 5 işlem</span>
-          </div>
-          <div class="tx-list" id="txList">
-            <div class="tx-empty">Bu dApp üzerinden henüz işlem yapmadın.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Sağ tarafta küçük info panel -->
-    <div class="card">
-      <div class="card-inner">
-        <div class="side-card-title">Bu mini dApp ne yapıyor?</div>
-        <div class="timeline">
-          <div class="timeline-item">
-            <div class="timeline-title">1. Cüzdanını bağlıyorsun</div>
-            <div class="timeline-sub">
-              Tarayıcı cüzdanınla (MetaMask, Rabby, vb.) Base ağına bağlanıyorsun. dApp, sadece sen onay verdiğinde işlem gönderiyor.
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-title">2. Kontrattaki mesajı okuyor</div>
-            <div class="timeline-sub">
-              HelloBase kontratındaki <code>message()</code> fonksiyonunu çağırıp zincirdeki güncel mesajı gösteriyor.
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-title">3. On-chain mesaj güncelleme</div>
-            <div class="timeline-sub">
-              Yazdığın yeni mesaj, <code>setMessage()</code> ile doğrudan Base üzerindeki kontrata kaydediliyor.
-            </div>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-title">4. Tüm işlemler BaseScan’de izlenebilir</div>
-            <div class="timeline-sub">
-              Her tx; BaseScan üzerinde kontrat adresi ve senin cüzdanın üzerinden görülebilir.
-            </div>
-          </div>
-        </div>
-
-        <div class="hint" style="margin-top: 14px;">
-          Bu dApp, Mesut’un Base ekosisteminde builder olarak ilk adımlarını gösterir.  
-          İleride buraya: token, NFT, leaderboard ve daha fazla on-chain özellik ekleyebilirsin. 💙
-        </div>
-
-        <!-- Sosyal Linkler -->
-        <div style="margin-top: 24px;">
-          <div class="side-card-title" style="margin-bottom: 12px;">Sosyal Bağlantılar</div>
-
-          <div style="display: flex; flex-direction: column; gap: 10px;">
-
-            <a href="https://x.com/soylebisey" target="_blank"
-               style="
-                 display:flex; align-items:center; gap:10px;
-                 padding:10px 14px; border-radius:12px;
-                 background:rgba(15,23,42,0.85);
-                 border:1px solid rgba(51,65,85,0.7);
-                 text-decoration:none; color:#e5e7eb; font-size:13px;
-                 transition:all .15s ease;
-               "
-               onmouseover="this.style.background='rgba(37,99,235,0.25)'; this.style.borderColor='#3b82f6';"
-               onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.borderColor='rgba(51,65,85,0.7)';">
-              <span style="font-size:17px;">🐦</span>
-              <span>X (Twitter)</span>
-            </a>
-
-            <a href="https://github.com/Mesut006" target="_blank"
-               style="
-                 display:flex; align-items:center; gap:10px;
-                 padding:10px 14px; border-radius:12px;
-                 background:rgba(15,23,42,0.85);
-                 border:1px solid rgba(51,65,85,0.7);
-                 text-decoration:none; color:#e5e7eb; font-size:13px;
-                 transition:all .15s ease;
-               "
-               onmouseover="this.style.background='rgba(37,99,235,0.25)'; this.style.borderColor='#3b82f6';"
-               onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.borderColor='rgba(51,65,85,0.7)';">
-              <span style="font-size:17px;">🐙</span>
-              <span>GitHub</span>
-            </a>
-
-            <a href="https://paragraph.com/@0xf159092ad36e8d0524be07f703866b1866d3d94d" target="_blank"
-               style="
-                 display:flex; align-items:center; gap:10px;
-                 padding:10px 14px; border-radius:12px;
-                 background:rgba(15,23,42,0.85);
-                 border:1px solid rgba(51,65,85,0.7);
-                 text-decoration:none; color:#e5e7eb; font-size:13px;
-                 transition:all .15s ease;
-               "
-               onmouseover="this.style.background='rgba(37,99,235,0.25)'; this.style.borderColor='#3b82f6';"
-               onmouseout="this.style.background='rgba(15,23,42,0.85)'; this.style.borderColor='rgba(51,65,85,0.7)';">
-              <span style="font-size:17px;">📝</span>
-              <span>Paragraph</span>
-            </a>
-
-          </div>
-        </div>
-
-      </div>
-    </div>
+    <div class="status" id="status"></div>
   </div>
 
   <script>
-    const ethers = window.ethers;
-
-    // Bu dApp'in hedef ağı: Base Mainnet
-    const EXPECTED_CHAIN_ID = 8453;
-
-    // Senin kontrat adresin
     const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
 
-    // HelloBase ABI
-    const CONTRACT_ABI = [
+    const ABI = [
       {
         "inputs": [],
         "name": "message",
-        "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+        "outputs": [{ "type": "string" }],
         "stateMutability": "view",
         "type": "function"
       },
       {
-        "inputs": [{ "internalType": "string", "name": "newMessage", "type": "string" }],
+        "inputs": [{ "name": "newMessage", "type": "string" }],
         "name": "setMessage",
         "outputs": [],
         "stateMutability": "nonpayable",
@@ -765,274 +135,78 @@
       }
     ];
 
-    let provider;
-    let signer;
-    let contract;
-    let lastNetworkChainId = null;
-    let txHistory = [];
-    let isConnecting = false;
+    let provider, signer, contract;
 
-    const connectButton = document.getElementById("connectButton");
-    const walletInfo = document.getElementById("walletInfo");
-    const currentMessageEl = document.getElementById("currentMessage");
-    const currentMessageBox = document.getElementById("currentMessageBox");
-    const refreshMessageButton = document.getElementById("refreshMessageButton");
-    const newMessageInput = document.getElementById("newMessageInput");
-    const setMessageButton = document.getElementById("setMessageButton");
-    const txStatus = document.getElementById("txStatus");
-
-    const walletChipContainer = document.getElementById("walletChipContainer");
-    const walletAvatar = document.getElementById("walletAvatar");
-    const walletShortLabel = document.getElementById("walletShortLabel");
-
-    const txList = document.getElementById("txList");
-
-    const networkWarning = document.getElementById("networkWarning");
-    const networkWarningText = document.getElementById("networkWarningText");
-
-    function setWalletVisual(address) {
-      if (!address) {
-        walletChipContainer.style.display = "none";
-        return;
-      }
-
-      const short = address.slice(0, 6) + "…" + address.slice(-4);
-      const initials = address.slice(2, 4).toUpperCase();
-
-      const segment = address.slice(2, 6);
-      let hue = parseInt(segment, 16);
-      if (Number.isNaN(hue)) hue = 210;
-      hue = hue % 360;
-
-      walletAvatar.textContent = initials;
-      walletAvatar.style.background = `linear-gradient(135deg, hsl(${hue},80%,60%), hsl(${(hue + 40) % 360},80%,50%))`;
-      walletShortLabel.textContent = short;
-      walletChipContainer.style.display = "block";
-    }
-
-    function formatTimeAgo(ts) {
-      const diffMs = Date.now() - ts;
-      const sec = Math.floor(diffMs / 1000);
-      if (sec < 60) return "az önce";
-      const min = Math.floor(sec / 60);
-      if (min < 60) return `${min} dk önce`;
-      const hour = Math.floor(min / 60);
-      if (hour < 24) return `${hour} saat önce`;
-      const day = Math.floor(hour / 24);
-      return `${day} gün önce`;
-    }
-
-    function saveTxHistory() {
-      try {
-        localStorage.setItem("helloBaseTxHistory", JSON.stringify(txHistory));
-      } catch (e) {
-        console.warn("Tx history kaydedilemedi:", e);
-      }
-    }
-
-    function loadTxHistory() {
-      try {
-        const raw = localStorage.getItem("helloBaseTxHistory");
-        if (!raw) {
-          txHistory = [];
-        } else {
-          txHistory = JSON.parse(raw) || [];
-        }
-      } catch {
-        txHistory = [];
-      }
-      renderTxHistory();
-    }
-
-    function renderTxHistory() {
-      if (!txList) return;
-      if (!txHistory.length) {
-        txList.innerHTML = '<div class="tx-empty">Bu dApp üzerinden henüz işlem yapmadın.</div>';
-        return;
-      }
-
-      txList.innerHTML = txHistory
-        .map((item) => {
-          const shortHash = item.hash.slice(0, 6) + "…" + item.hash.slice(-4);
-          const timeAgo = formatTimeAgo(item.timestamp);
-          const chain = item.chainId ? `chainId: ${item.chainId}` : "";
-          const explorer = item.explorerUrl
-            ? `<a class="tx-link" href="${item.explorerUrl}" target="_blank">BaseScan</a>`
-            : "";
-
-          return `
-            <div class="tx-item">
-              <div class="tx-row">
-                <span class="tx-hash">${shortHash}</span>
-                <span class="tx-meta">${timeAgo}</span>
-              </div>
-              <div class="tx-meta">
-                ${chain} ${explorer ? "• " + explorer : ""}
-              </div>
-            </div>
-          `;
-        })
-        .join("");
-    }
-
-    function updateNetworkWarning(chainId) {
-      if (!chainId) {
-        networkWarning.classList.add("hidden");
-        return;
-      }
-
-      if (chainId !== EXPECTED_CHAIN_ID) {
-        networkWarning.classList.remove("hidden");
-        networkWarningText.textContent =
-          `This dApp is built for Base Mainnet (chainId 8453). ` +
-          `Current connected chainId: ${chainId}. ` +
-          `Switch to Base Mainnet in your wallet for full functionality.`;
-      } else {
-        networkWarning.classList.add("hidden");
-      }
-    }
+    const connectBtn = document.getElementById("connectBtn");
+    const sendBtn = document.getElementById("sendBtn");
+    const walletBox = document.getElementById("walletBox");
+    const messageBox = document.getElementById("messageBox");
+    const statusEl = document.getElementById("status");
+    const input = document.getElementById("messageInput");
 
     async function connectWallet() {
-      if (isConnecting) return;
       if (!window.ethereum) {
-        alert("No EVM compatible wallet found. Please install a browser wallet like MetaMask, Rabby, Coinbase Wallet, etc.");
+        alert("Wallet not found");
         return;
       }
 
       try {
-        isConnecting = true;
-
-        // ethers Web3Provider
+        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
         provider = new ethers.providers.Web3Provider(window.ethereum);
-        // EIP-1193 üzerinden account iste
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts"
-        });
-
         signer = provider.getSigner();
-        const network = await provider.getNetwork();
-        lastNetworkChainId = network.chainId;
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-        updateNetworkWarning(network.chainId);
+        walletBox.textContent = "Wallet: " + accounts[0];
+        connectBtn.textContent = "Connected";
+        sendBtn.disabled = false;
 
-        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-        walletInfo.textContent = `Ağ chainId: ${network.chainId} | Cüzdan: ${accounts[0]}`;
-        connectButton.querySelector(".btn-label").textContent = "Bağlı";
-        setMessageButton.disabled = false;
-
-        setWalletVisual(accounts[0]);
-        await readMessage();
+        loadMessage();
       } catch (e) {
         console.error(e);
-        alert("Cüzdan bağlanırken hata oluştu: " + (e.message || e));
-      } finally {
-        isConnecting = false;
       }
     }
 
-    async function readMessage() {
-      if (!contract) {
-        currentMessageEl.textContent = "Kontrat bağlı değil.";
-        return;
-      }
+    async function loadMessage() {
       try {
-        if (currentMessageBox) currentMessageBox.classList.add("shimmer");
-        currentMessageEl.textContent = "Yükleniyor...";
         const msg = await contract.message();
-        currentMessageEl.textContent = msg || "(Boş)";
-      } catch (e) {
-        console.error(e);
-        currentMessageEl.textContent = "Mesaj okunurken hata.";
-      } finally {
-        if (currentMessageBox) currentMessageBox.classList.remove("shimmer");
+        messageBox.textContent = "Message: " + msg;
+      } catch {
+        messageBox.textContent = "Message: error";
       }
     }
 
-    async function setMessage() {
-      if (!contract) {
-        alert("Önce cüzdanı bağlamalısın.");
-        return;
-      }
-      const text = newMessageInput.value.trim();
-      if (!text) {
-        alert("Lütfen bir mesaj yaz.");
-        return;
-      }
+    async function updateMessage() {
+      const text = input.value.trim();
+      if (!text) return;
 
       try {
-        txStatus.textContent = "İşlem gönderiliyor...";
-        setMessageButton.disabled = true;
-        setMessageButton.classList.add("loading");
-
+        statusEl.textContent = "Sending transaction…";
         const tx = await contract.setMessage(text);
-        txStatus.textContent = "Onay bekleniyor...";
-
         await tx.wait();
-
-        txStatus.textContent = "İşlem onaylandı ✅";
-        await readMessage();
-
-        const explorerUrl =
-          lastNetworkChainId === 8453
-            ? `https://basescan.org/tx/${tx.hash}`
-            : lastNetworkChainId === 84532
-            ? `https://sepolia.basescan.org/tx/${tx.hash}`
-            : "";
-
-        txHistory.unshift({
-          hash: tx.hash,
-          timestamp: Date.now(),
-          chainId: lastNetworkChainId,
-          explorerUrl
-        });
-
-        txHistory = txHistory.slice(0, 5);
-        saveTxHistory();
-        renderTxHistory();
-
-        setTimeout(() => (txStatus.textContent = ""), 4000);
+        statusEl.textContent = "Transaction confirmed ✅";
+        input.value = "";
+        loadMessage();
       } catch (e) {
-        console.error(e);
-        txStatus.textContent = "İşlem hatası: " + (e.message || e);
-      } finally {
-        setMessageButton.disabled = false;
-        setMessageButton.classList.remove("loading");
+        statusEl.textContent = "Transaction failed";
       }
     }
 
-    connectButton.addEventListener("click", connectWallet);
-    refreshMessageButton.addEventListener("click", readMessage);
-    setMessageButton.addEventListener("click", setMessage);
+    connectBtn.onclick = connectWallet;
+    sendBtn.onclick = updateMessage;
+  </script>
 
-    // İlk yüklemede local tx geçmişini al
-    loadTxHistory();
+  <!-- ✅ FARCASTER READY SIGNAL (EN KRİTİK KISIM) -->
   <script>
-  // Farcaster Mini App: signal "ready" (splash screen should go away)
-  (function readyLoop() {
-    try {
-      if (window.sdk && window.sdk.actions && typeof window.sdk.actions.ready === "function") {
-        window.sdk.actions.ready();
-        console.log("sdk.actions.ready() sent ✅");
-        return;
-      }
-    } catch (e) {
-      console.warn("ready() error", e);
-    }
-    setTimeout(readyLoop, 100); // sdk geç gelirse diye tekrar dene
-  })();
-</script>
-
+    (function readyLoop() {
+      try {
+        if (window.sdk && window.sdk.actions && typeof window.sdk.actions.ready === "function") {
+          window.sdk.actions.ready();
+          console.log("sdk.actions.ready() sent ✅");
+          return;
+        }
+      } catch (e) {}
+      setTimeout(readyLoop, 100);
+    })();
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
