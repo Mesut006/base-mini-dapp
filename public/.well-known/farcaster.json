@@ -1,18 +1,17 @@
- "accountAssociation": {
+{
+  "accountAssociation": {
     "header": "eyJmaWQiOjI5MDkzNSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDVlZTM4MjE3OWM4OTIxMTBiNjU5Y0RFNDAyYmQxOTVDQjUxZjY3NjYifQ",
     "payload": "eyJkb21haW4iOiJiYXNlLW1pbmktZGFwcC52ZXJjZWwuYXBwIn0",
     "signature": "IrCyMips+lYvArNe3CRN10B+AP74rGTrCq4xG3biRJpO54LtNIRfUqCjr+LcGcDqMqjhSNH157abpaCV+6zt5Rs="
-  }
-}
   },
   "baseBuilder": {
     "ownerAddress": "0x65bDe36538B70F0EC8b622B8DB75981405587aF4"
   },
- "miniapp": {
+  "miniapp": {
     "version": "1",
     "name": "HelloBase Mini dApp",
     "homeUrl": "https://base-mini-dapp.vercel.app/",
-    "iconUrl": "https://base-mini-dapp.vercel.app/icon.png/",
+    "iconUrl": "https://base-mini-dapp.vercel.app/icon.png",
     "splashImageUrl": "https://base-mini-dapp.vercel.app/og.png",
     "splashBackgroundColor": "#020617",
     "webhookUrl": "",
