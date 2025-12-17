@@ -57,5 +57,18 @@
     })();
   </script>
 </body>
+  <script>
+  window.addEventListener("load", async () => {
+    try {
+      if (window.sdk?.actions?.ready) {
+        await window.sdk.actions.ready();
+        console.log("sdk.actions.ready() OK");
+      }
+    } catch (e) {
+      console.warn("sdk.actions.ready() error", e);
+    }
+  });
+</script>
 </html>
+
 
