@@ -982,5 +982,15 @@
     // İlk yüklemede local tx geçmişini al
     loadTxHistory();
   </script>
+  <script type="module">
+  import sdk from "https://esm.sh/@farcaster/miniapp-sdk";
+  try {
+    await sdk.actions.ready();
+    console.log("Farcaster Mini App ready ✅");
+  } catch (e) {
+    console.log("Not in Farcaster / ready failed:", e);
+  }
+</script>
+
 </body>
 </html>
