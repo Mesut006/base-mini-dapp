@@ -1,12 +1,7 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-  "routes": [
-    { "handle": "filesystem" },
-
-    { "src": "/og\\.png", "dest": "/og.png" },
-    { "src": "/icon\\.png", "dest": "/icon.png" },
-
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
