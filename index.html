@@ -538,15 +538,50 @@
     </div>
   </div>
 
-  <script type="module">
-    import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk";
+ <script type="module">
+  import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk";
 
-    (async () => {
-      const ethers = window.ethers;
-      if (!ethers) {
-        alert("ethers yüklenemedi (CDN engellenmiş olabilir).");
-        return;
-      }
+  // Splash’te takılmayı önleyen failsafe: 2.5sn sonra yine de ready dene
+  const READY_TIMEOUT_MS = 2500;
+  let readyCalled = false;
+
+  async function safeReady() {
+    if (readyCalled) return;
+    readyCalled = true;
+    try { await sdk.actions.ready(); } catch (e) { /* ignore */ }
+  }
+
+  // Global hata yakalama (Mini App içinde debug için çok işe yarar)
+  window.addEventListener("error", (e) => {
+    const el = document.getElementById("walletStatus");
+    if (el) el.textContent = "JS error: " + (e?.message || "unknown");
+    safeReady();
+  });
+  window.addEventListener("unhandledrejection", (e) => {
+    const el = document.getElementById("walletStatus");
+    if (el) el.textContent = "Promise error: " + (e?.reason?.message || String(e?.reason || "unknown"));
+    safeReady();
+  });
+
+  // Failsafe timer
+  setTimeout(safeReady, READY_TIMEOUT_MS);
+
+  (async () => {
+    // ✅ En başta splash’ı kapat
+    await safeReady();
+
+    const ethers = window.ethers;
+    if (!ethers) {
+      const el = document.getElementById("walletStatus");
+      if (el) el.textContent = "ethers yüklenemedi (CDN engelli olabilir).";
+      return;
+    }
+
+    // ---- senin mevcut kodun buradan aşağı aynen devam edebilir ----
+    // sadece getEip1193Provider fonksiyonunu (mini app’te önce SDK) yapmanı öneririm
+  })();
+</script>
+
 
       const EXPECTED_CHAIN_ID = 8453;
       const EXPECTED_CHAIN_ID_HEX = "0x2105";
