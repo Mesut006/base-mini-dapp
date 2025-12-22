@@ -614,14 +614,19 @@
         }
       }
 
-      async function getEip1193Provider() {
-        // 1) Web: injected wallet varsa onu kullan
-        if (window.ethereum?.request) return window.ethereum;
+     async function getEip1193Provider() {
+  const isMini = await sdk.isInMiniApp().catch(() => false);
 
-        // 2) Farcaster: host wallet provider
-        try { return await sdk.wallet.getEthereumProvider(); } catch {}
-        return null;
-      }
+  // Mini App içindeyken her zaman önce host provider
+  if (isMini) {
+    try { return await sdk.wallet.getEthereumProvider(); } catch {}
+  }
+
+  // Normal web
+  if (window.ethereum?.request) return window.ethereum;
+
+  return null;
+}
 
       function loadTxHistory() {
         try {
