@@ -4,47 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Mesut - HelloBase Mini dApp</title>
-<script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk/dist/index.umd.js"></script>
+
   <meta name="base:app_id" content="69414c52d19763ca26ddc34d" />
 
   <!-- Farcaster Mini App Embed -->
- <meta
-  name="fc:miniapp"
-  content='{
-    "version":"1",
-    "imageUrl":"https://base-mini-dapp.vercel.app/og.png",
-    "button":{
-      "title":"Open Mini App",
-      "action":{
-        "type":"launch_miniapp",
-        "name":"HelloBase Dashboard",
-        "url":"https://base-mini-dapp.vercel.app/",
-        "splashImageUrl":"https://base-mini-dapp.vercel.app/icon.png",
-        "splashBackgroundColor":"#020617"
-      }
-    }
-  }'
-/>
+  <meta
+    name="fc:miniapp"
+    content='{"version":"1","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Open Mini App","action":{"type":"launch_miniapp","name":"HelloBase Dashboard","url":"https://base-mini-dapp.vercel.app/","splashImageUrl":"https://base-mini-dapp.vercel.app/icon.png","splashBackgroundColor":"#020617"}}}'
+  />
+  <!-- Backward compatibility -->
+  <meta
+    name="fc:frame"
+    content='{"version":"1","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Open Mini App","action":{"type":"launch_frame","name":"HelloBase Dashboard","url":"https://base-mini-dapp.vercel.app/","splashImageUrl":"https://base-mini-dapp.vercel.app/icon.png","splashBackgroundColor":"#020617"}}}'
+  />
 
-<meta
-  name="fc:frame"
-  content='{
-    "version":"1",
-    "imageUrl":"https://base-mini-dapp.vercel.app/og.png",
-    "button":{
-      "title":"Open Mini App",
-      "action":{
-        "type":"launch_frame",
-        "name":"HelloBase Dashboard",
-        "url":"https://base-mini-dapp.vercel.app/",
-        "splashImageUrl":"https://base-mini-dapp.vercel.app/icon.png",
-        "splashBackgroundColor":"#020617"
-      }
-    }
-  }'
-/>
-<!-- Ethers.js (v5 UMD) -->
+  <!-- Ethers.js (v5 UMD) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+  <!-- Farcaster Mini App SDK (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk@latest/dist/index.umd.js"></script>
 
   <style>
     :root {
@@ -52,14 +30,11 @@
       --bg-card: #020617;
       --border: #1e293b;
       --accent: #3b82f6;
-      --accent-soft: rgba(59, 130, 246, 0.15);
       --text-main: #e5e7eb;
       --text-sub: #9ca3af;
       --text-muted: #6b7280;
     }
-
     * { box-sizing: border-box; }
-
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: radial-gradient(circle at top, #1d4ed8 0, #020617 40%, #000 100%);
@@ -71,7 +46,6 @@
       margin: 0;
       padding: 16px;
     }
-
     .shell {
       width: 100%;
       max-width: 960px;
@@ -79,334 +53,195 @@
       grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
       gap: 20px;
     }
-    @media (max-width: 768px) {
-      .shell { grid-template-columns: minmax(0, 1fr); }
-    }
-
+    @media (max-width: 768px) { .shell { grid-template-columns: 1fr; } }
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 22px;
-      box-shadow:
-        0 22px 45px rgba(0, 0, 0, 0.75),
-        0 0 0 1px rgba(15, 23, 42, 0.9);
+      box-shadow: 0 22px 45px rgba(0,0,0,0.75), 0 0 0 1px rgba(15,23,42,0.9);
       position: relative;
       overflow: hidden;
       transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
       background: radial-gradient(circle at top left, rgba(59,130,246,0.18) 0, transparent 55%);
-      opacity: 0.6;
-      pointer-events: none;
+      opacity:.6; pointer-events:none;
     }
-
-    .card:hover {
+    .card:hover{
       transform: translateY(-2px);
-      box-shadow:
-        0 26px 55px rgba(15, 23, 42, 0.95),
-        0 0 0 1px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 26px 55px rgba(15, 23, 42, 0.95), 0 0 0 1px rgba(37, 99, 235, 0.3);
       border-color: rgba(59,130,246,0.7);
     }
-
     .card-inner { position: relative; z-index: 1; }
 
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: flex-start;
-      margin-bottom: 16px;
+    .header-row{
+      display:flex; justify-content:space-between; gap:12px;
+      align-items:flex-start; margin-bottom:16px;
     }
-
-    .logo-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 10px;
-      border-radius: 999px;
+    .logo-pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:4px 10px; border-radius:999px;
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(51, 65, 85, 0.8);
-      font-size: 11px;
+      font-size:11px; color: var(--text-sub);
+    }
+    .logo-circle{
+      width:18px; height:18px; border-radius:999px;
+      background:#0ea5e9; box-shadow:0 0 0 3px rgba(14,165,233,0.25);
+    }
+    h1{ font-size:20px; margin:0; color:#e0f2fe; letter-spacing:0.02em; }
+    .subtitle{ font-size:12px; color: var(--text-sub); margin-top:4px; }
+    .badge-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+    .badge{
+      font-size:10px; border-radius:999px; padding:3px 9px;
+      border: 1px solid rgba(51,65,85,0.9);
       color: var(--text-sub);
+      background: rgba(15,23,42,0.9);
     }
 
-    .logo-circle {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      background: #0ea5e9;
-      box-shadow: 0 0 0 3px rgba(14,165,233,0.25);
-    }
-
-    h1 {
-      font-size: 20px;
-      margin: 0;
-      color: #e0f2fe;
-      letter-spacing: 0.02em;
-    }
-
-    .subtitle {
-      font-size: 12px;
-      color: var(--text-sub);
-      margin-top: 4px;
-    }
-
-    .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .badge {
-      font-size: 10px;
-      border-radius: 999px;
-      padding: 3px 9px;
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      color: var(--text-sub);
-      background: rgba(15, 23, 42, 0.9);
-    }
-
-    button {
+    button{
       background: var(--accent);
-      border: none;
-      border-radius: 999px;
-      color: white;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      transition: all 0.15s ease;
-      position: relative;
-      overflow: hidden;
+      border:none; border-radius:999px;
+      color:white; padding:8px 16px;
+      cursor:pointer; font-size:13px; font-weight:500;
+      display:inline-flex; align-items:center; gap:6px;
+      white-space:nowrap; transition:all .15s ease;
+      position:relative; overflow:hidden;
     }
-
-    button:hover {
-      background: #1d4ed8;
-      transform: translateY(-1px);
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.35);
+    button:hover{ background:#1d4ed8; transform: translateY(-1px); box-shadow: 0 10px 30px rgba(37,99,235,0.35); }
+    button:disabled{ background:#4b5563; cursor:not-allowed; box-shadow:none; transform:none; }
+    .btn-secondary{
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(51,65,85,0.9);
+      color: var(--text-sub); box-shadow:none;
     }
-
-    button:disabled {
-      background: #4b5563;
-      cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
+    .btn-secondary:hover{
+      background: rgba(30,64,175,0.6);
+      border-color:#3b82f6; color:#e5e7eb;
     }
-
-    .btn-secondary {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      color: var(--text-sub);
-      box-shadow: none;
-    }
-    .btn-secondary:hover {
-      background: rgba(30, 64, 175, 0.6);
-      border-color: #3b82f6;
-      color: #e5e7eb;
-    }
-
-    .btn-label { display: inline-flex; align-items: center; gap: 6px; }
-    .btn-spinner {
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      border: 2px solid rgba(226, 232, 240, 0.7);
+    .btn-label{ display:inline-flex; align-items:center; gap:6px; }
+    .btn-spinner{
+      width:14px; height:14px; border-radius:999px;
+      border:2px solid rgba(226,232,240,0.7);
       border-top-color: transparent;
-      display: none;
-      animation: spin 0.7s linear infinite;
+      display:none; animation: spin .7s linear infinite;
     }
-    button.loading .btn-spinner { display: inline-block; }
-    button.loading .btn-label { opacity: 0.85; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    button.loading .btn-spinner{ display:inline-block; }
+    button.loading .btn-label{ opacity:.85; }
+    @keyframes spin{ to{ transform: rotate(360deg);} }
 
-    .section { margin-top: 18px; }
-    .label-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-      gap: 10px;
+    .section{ margin-top:18px; }
+    .label-row{
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:6px; gap:10px;
     }
-    .label {
-      font-size: 11px;
-      color: var(--text-sub);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+    .label{
+      font-size:11px; color: var(--text-sub);
+      text-transform: uppercase; letter-spacing:0.08em;
     }
+    .pill{ font-size:10px; border-radius:999px; padding:3px 7px;
+      border: 1px solid rgba(55,65,81,0.9); color: var(--text-sub); }
+    .value-box{
+      border-radius:14px; border:1px solid var(--border);
+      padding:10px 12px; background: rgba(15,23,42,0.96);
+      font-size:12px; word-break:break-all; min-height:38px;
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      transition: border-color .15s ease, background .15s ease;
+    }
+    .value-main{ font-size:12px; color: var(--text-main); opacity:.9; }
 
-    .value-box {
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      padding: 10px 12px;
-      background: rgba(15, 23, 42, 0.96);
-      font-size: 12px;
-      word-break: break-all;
-      min-height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      transition: border-color 0.15s ease, background 0.15s ease;
-    }
-    .value-main { font-size: 12px; color: var(--text-main); opacity: 0.9; }
-
-    .pill {
-      font-size: 10px;
-      border-radius: 999px;
-      padding: 3px 7px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      color: var(--text-sub);
-    }
-
-    input {
-      width: 100%;
-      padding: 9px 11px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.96);
+    input{
+      width:100%; padding:9px 11px;
+      border-radius:10px; border:1px solid var(--border);
+      background: rgba(15,23,42,0.96);
       color: var(--text-main);
-      font-size: 13px;
-      outline: none;
-      transition: all 0.12s ease;
+      font-size:13px; outline:none;
+      transition: all .12s ease;
     }
-    input::placeholder { color: #6b7280; }
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(59,130,246,0.7);
-    }
+    input::placeholder{ color:#6b7280; }
+    input:focus{ border-color: var(--accent); box-shadow: 0 0 0 1px rgba(59,130,246,0.7); }
 
-    .status {
-      font-size: 11px;
-      color: var(--text-sub);
-      margin-top: 4px;
-      min-height: 16px;
-      white-space: pre-line;
+    .status{ font-size:11px; color: var(--text-sub); margin-top:4px; min-height:16px; white-space: pre-line; }
+    .hint{ font-size:11px; color: var(--text-muted); margin-top:10px; }
+    .tag{
+      display:inline-flex; font-size:10px; border-radius:999px;
+      border: 1px solid rgba(148,163,184,0.8);
+      padding:2px 9px; color: var(--text-sub); margin-right:6px;
     }
+    .side-card-title{ font-size:13px; font-weight:500; margin-bottom:8px; }
+    .timeline{ border-left:1px solid rgba(51,65,85,0.9); margin-left:5px; padding-left:14px; margin-top:6px; }
+    .timeline-item{ margin-bottom:12px; position:relative; }
+    .timeline-item::before{
+      content:""; position:absolute; left:-15px; top:4px;
+      width:8px; height:8px; border-radius:999px;
+      background:#3b82f6; box-shadow: 0 0 0 3px rgba(37,99,235,0.3);
+    }
+    .timeline-title{ font-size:12px; color: var(--text-main); }
+    .timeline-sub{ font-size:11px; color: var(--text-sub); }
 
-    .hint { font-size: 11px; color: var(--text-muted); margin-top: 10px; }
-    .tag {
-      display: inline-flex;
-      font-size: 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.8);
-      padding: 2px 9px;
-      color: var(--text-sub);
-      margin-right: 6px;
+    .wallet-chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(51,65,85,0.9);
+      font-size:11px; color: var(--text-sub);
+      margin-top:8px;
     }
+    .wallet-avatar{
+      width:22px; height:22px; border-radius:999px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:600; color:#0b1120;
+      box-shadow: 0 0 0 2px rgba(15,23,42,0.9);
+    }
+    .wallet-label{ font-size:11px; color: var(--text-main); }
 
-    .side-card-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
-    .timeline { border-left: 1px solid rgba(51, 65, 85, 0.9); margin-left: 5px; padding-left: 14px; margin-top: 6px; }
-    .timeline-item { margin-bottom: 12px; position: relative; }
-    .timeline-item::before {
-      content: "";
-      position: absolute;
-      left: -15px;
-      top: 4px;
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
-    }
-    .timeline-title { font-size: 12px; color: var(--text-main); }
-    .timeline-sub { font-size: 11px; color: var(--text-sub); }
-
-    .wallet-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      font-size: 11px;
-      color: var(--text-sub);
-      margin-top: 8px;
-    }
-    .wallet-avatar {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 600;
-      color: #0b1120;
-      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9);
-    }
-    .wallet-label { font-size: 11px; color: var(--text-main); }
-
-    .tx-list {
-      margin-top: 6px;
-      border-radius: 12px;
+    .tx-list{
+      margin-top:6px; border-radius:12px;
       border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.96);
-      padding: 8px 10px;
-      max-height: 180px;
-      overflow-y: auto;
+      background: rgba(15,23,42,0.96);
+      padding:8px 10px; max-height:180px; overflow-y:auto;
     }
-    .tx-empty { font-size: 11px; color: var(--text-muted); }
-    .tx-item {
-      font-size: 11px;
-      color: var(--text-sub);
-      padding: 5px 4px;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+    .tx-empty{ font-size:11px; color: var(--text-muted); }
+    .tx-item{
+      font-size:11px; color: var(--text-sub);
+      padding:5px 4px; border-radius:8px;
+      display:flex; flex-direction:column; gap:2px;
     }
-    .tx-item + .tx-item { border-top: 1px solid rgba(30, 41, 59, 0.9); margin-top: 4px; }
-    .tx-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .tx-hash {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      color: #e5e7eb;
-    }
-    .tx-meta { font-size: 10px; color: var(--text-muted); }
+    .tx-item + .tx-item{ border-top:1px solid rgba(30,41,59,0.9); margin-top:4px; }
+    .tx-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .tx-hash{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color:#e5e7eb; }
+    .tx-meta{ font-size:10px; color: var(--text-muted); }
 
-    .shimmer {
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(
-        90deg,
-        rgba(15,23,42,0.96) 0%,
-        rgba(30,64,175,0.7) 50%,
-        rgba(15,23,42,0.96) 100%
-      );
-      background-size: 200% 100%;
+    .shimmer{
+      position:relative; overflow:hidden;
+      background: linear-gradient(90deg, rgba(15,23,42,0.96) 0%, rgba(30,64,175,0.7) 50%, rgba(15,23,42,0.96) 100%);
+      background-size:200% 100%;
       animation: shimmer-move 1.2s ease-in-out infinite;
     }
-    @keyframes shimmer-move {
-      0% { background-position: -150% 0; }
-      100% { background-position: 150% 0; }
-    }
+    @keyframes shimmer-move{ 0%{ background-position:-150% 0;} 100%{ background-position:150% 0;} }
 
-    .network-warning {
-      position: fixed;
-      top: 12px;
-      left: 50%;
+    .network-warning{
+      position:fixed; top:12px; left:50%;
       transform: translateX(-50%);
-      max-width: 960px;
+      max-width:960px;
       width: calc(100% - 32px);
-      border-radius: 14px;
-      border: 1px solid rgba(248, 113, 113, 0.6);
-      background: rgba(127, 29, 29, 0.95);
-      color: #fee2e2;
-      padding: 8px 12px;
-      font-size: 12px;
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      box-shadow: 0 18px 40px rgba(127, 29, 29, 0.7);
+      border-radius:14px;
+      border:1px solid rgba(248,113,113,0.6);
+      background: rgba(127,29,29,0.95);
+      color:#fee2e2;
+      padding:8px 12px;
+      font-size:12px;
+      display:flex; gap:8px; align-items:flex-start;
+      box-shadow: 0 18px 40px rgba(127,29,29,0.7);
       z-index: 50;
     }
-    .network-warning-icon { font-size: 16px; line-height: 1.2; }
-    .network-warning-text strong { color: #fecaca; }
-    .hidden { display: none; }
+    .network-warning-icon{ font-size:16px; line-height:1.2; }
+    .network-warning-text strong{ color:#fecaca; }
+    .hidden{ display:none; }
   </style>
 </head>
 
@@ -527,7 +362,7 @@
           </div>
           <div class="timeline-item">
             <div class="timeline-title">3. On-chain mesaj güncelleme</div>
-            <div class="timeline-sub">Tx için <code>wallet_sendCalls</code> kullanır (<code>atomicRequired:false</code> ile).</div>
+            <div class="timeline-sub">Önce <code>wallet_sendCalls</code> dener, yoksa normal tx ile gönderir.</div>
           </div>
         </div>
 
@@ -538,54 +373,43 @@
     </div>
   </div>
 
- <script>
-  const sdk = window.FarcasterMiniAppSDK;
- // Splash’te takılmayı önleyen failsafe: 2.5sn sonra yine de ready dene
-  const READY_TIMEOUT_MS = 2500;
-  let readyCalled = false;
+  <script>
+    (async () => {
+      // SDK yakala (UMD)
+      const sdkRoot = window.FarcasterMiniAppSDK || null;
+      const sdk = (sdkRoot && (sdkRoot.sdk || sdkRoot)) || null;
 
-  async function safeReady() {
-    if (readyCalled) return;
-    readyCalled = true;
-    try { await sdk.actions.ready(); } catch (e) { /* ignore */ }
-  }
+      // Splash’te takılma önlemi
+      let readyCalled = false;
+      async function safeReady() {
+        if (readyCalled) return;
+        readyCalled = true;
+        try { await sdk?.actions?.ready?.(); } catch (e) {}
+      }
+      setTimeout(safeReady, 2500);
+      window.addEventListener("error", (e) => {
+        const el = document.getElementById("walletStatus");
+        if (el) el.textContent = "JS error: " + (e?.message || "unknown");
+        safeReady();
+      });
+      window.addEventListener("unhandledrejection", (e) => {
+        const el = document.getElementById("walletStatus");
+        if (el) el.textContent = "Promise error: " + (e?.reason?.message || String(e?.reason || "unknown"));
+        safeReady();
+      });
 
-  // Global hata yakalama (Mini App içinde debug için çok işe yarar)
-  window.addEventListener("error", (e) => {
-    const el = document.getElementById("walletStatus");
-    if (el) el.textContent = "JS error: " + (e?.message || "unknown");
-    safeReady();
-  });
-  window.addEventListener("unhandledrejection", (e) => {
-    const el = document.getElementById("walletStatus");
-    if (el) el.textContent = "Promise error: " + (e?.reason?.message || String(e?.reason || "unknown"));
-    safeReady();
-  });
+      // ✅ önce ready dene
+      await safeReady();
 
-  // Failsafe timer
-  setTimeout(safeReady, READY_TIMEOUT_MS);
-
-  (async () => {
-    // ✅ En başta splash’ı kapat
-    await safeReady();
-
-    const ethers = window.ethers;
-    if (!ethers) {
-      const el = document.getElementById("walletStatus");
-      if (el) el.textContent = "ethers yüklenemedi (CDN engelli olabilir).";
-      return;
-    }
-
-    // ---- senin mevcut kodun buradan aşağı aynen devam edebilir ----
-    // sadece getEip1193Provider fonksiyonunu (mini app’te önce SDK) yapmanı öneririm
-  })();
-</script>
-
+      const ethers = window.ethers;
+      if (!ethers) {
+        alert("ethers yüklenemedi (CDN engellenmiş olabilir).");
+        return;
+      }
 
       const EXPECTED_CHAIN_ID = 8453;
       const EXPECTED_CHAIN_ID_HEX = "0x2105";
       const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
-
       const CONTRACT_ABI = [
         { "inputs": [], "name": "message", "outputs": [{ "type": "string" }], "stateMutability": "view", "type": "function" },
         { "inputs": [{ "name": "newMessage", "type": "string" }], "name": "setMessage", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
@@ -601,10 +425,8 @@
       const setMessageButton = document.getElementById("setMessageButton");
       const txStatus = document.getElementById("txStatus");
       const txList = document.getElementById("txList");
-
       const networkWarning = document.getElementById("networkWarning");
       const networkWarningText = document.getElementById("networkWarningText");
-
       const walletChipContainer = document.getElementById("walletChipContainer");
       const walletAvatar = document.getElementById("walletAvatar");
       const walletShortLabel = document.getElementById("walletShortLabel");
@@ -615,7 +437,6 @@
       let lastChainId = null;
       let contractRead = null;
 
-      // local tx history
       let txHistory = [];
       const TX_KEY = "helloBaseTxHistory";
 
@@ -648,19 +469,14 @@
         }
       }
 
-     async function getEip1193Provider() {
-  const isMini = await sdk.isInMiniApp().catch(() => false);
-
-  // Mini App içindeyken her zaman önce host provider
-  if (isMini) {
-    try { return await sdk.wallet.getEthereumProvider(); } catch {}
-  }
-
-  // Normal web
-  if (window.ethereum?.request) return window.ethereum;
-
-  return null;
-}
+      async function getEip1193Provider() {
+        const isMini = await (sdk?.isInMiniApp?.().catch(() => false));
+        if (isMini) {
+          try { return await sdk.wallet.getEthereumProvider(); } catch (e) {}
+        }
+        if (window.ethereum?.request) return window.ethereum;
+        return null;
+      }
 
       function loadTxHistory() {
         try {
@@ -669,11 +485,9 @@
         } catch { txHistory = []; }
         renderTxHistory();
       }
-
       function saveTxHistory() {
         try { localStorage.setItem(TX_KEY, JSON.stringify(txHistory)); } catch {}
       }
-
       function formatTimeAgo(ts) {
         const diffMs = Date.now() - ts;
         const sec = Math.floor(diffMs / 1000);
@@ -685,7 +499,6 @@
         const day = Math.floor(hour / 24);
         return `${day} gün önce`;
       }
-
       function renderTxHistory() {
         if (!txHistory.length) {
           txList.innerHTML = '<div class="tx-empty">Bu dApp üzerinden henüz işlem yapmadın.</div>';
@@ -700,9 +513,7 @@
                 <span class="tx-hash">${shortId}</span>
                 <span class="tx-meta">${timeAgo}</span>
               </div>
-              <div class="tx-meta">
-                ${item.kind} • chainId: ${item.chainId}
-              </div>
+              <div class="tx-meta">${item.kind} • chainId: ${item.chainId}</div>
             </div>
           `;
         }).join("");
@@ -781,6 +592,18 @@
         }
       }
 
+      async function canSendCalls(provider, chainIdHex) {
+        try {
+          const caps = await provider.request({
+            method: "wallet_getCapabilities",
+            params: [{ chainId: chainIdHex }]
+          });
+          return !!caps?.sendCalls;
+        } catch {
+          return false;
+        }
+      }
+
       async function setMessage() {
         if (!eip1193 || !address) {
           txStatus.textContent = "Önce cüzdanı bağlamalısın.";
@@ -804,26 +627,33 @@
           const iface = new ethers.utils.Interface(CONTRACT_ABI);
           const data = iface.encodeFunctionData("setMessage", [text]);
 
-          // ✅ atomicRequired FIX burada
-          const callsId = await eip1193.request({
-            method: "wallet_sendCalls",
-            params: [{
-              version: "2.0.0",
-              chainId: EXPECTED_CHAIN_ID_HEX,
-              from: address,
-              atomicRequired: false,
-              calls: [{ to: CONTRACT_ADDRESS, data, value: "0x0" }]
-            }]
-          });
+          const okSendCalls = await canSendCalls(eip1193, EXPECTED_CHAIN_ID_HEX);
 
-          txStatus.textContent = "İşlem gönderildi ✅";
+          if (okSendCalls) {
+            const callsId = await eip1193.request({
+              method: "wallet_sendCalls",
+              params: [{
+                version: "2.0.0",
+                chainId: EXPECTED_CHAIN_ID_HEX,
+                from: address,
+                atomicRequired: false,
+                calls: [{ to: CONTRACT_ADDRESS, data, value: "0x0" }]
+              }]
+            });
 
-          const idStr = String(callsId || (crypto?.randomUUID?.() || (Date.now() + "-" + Math.random())));
-          txHistory.unshift({ id: idStr, kind: "sendCalls", chainId: lastChainId, timestamp: Date.now() });
+            const idStr = String(callsId || (crypto?.randomUUID?.() || (Date.now() + "-" + Math.random())));
+            txHistory.unshift({ id: idStr, kind: "sendCalls", chainId: lastChainId, timestamp: Date.now() });
+          } else {
+            const signer = web3Provider.getSigner();
+            const tx = await signer.sendTransaction({ to: CONTRACT_ADDRESS, data, value: 0 });
+            txHistory.unshift({ id: String(tx.hash), kind: "tx", chainId: lastChainId, timestamp: Date.now() });
+          }
+
           txHistory = txHistory.slice(0, 5);
           saveTxHistory();
           renderTxHistory();
 
+          txStatus.textContent = "İşlem gönderildi ✅";
           newMessageInput.value = "";
           await readMessage();
           setTimeout(() => (txStatus.textContent = ""), 3500);
@@ -841,10 +671,6 @@
       setMessageButton.addEventListener("click", setMessage);
 
       loadTxHistory();
-
-      // Farcaster splash takılmasın
-      try { await sdk.actions.ready(); } catch {}
-
     })();
   </script>
 </body>
