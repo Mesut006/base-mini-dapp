@@ -538,8 +538,9 @@
     </div>
   </div>
 
- <script type="module">
-  import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk";
+ <script>
+  const sdk = window.FarcasterMiniAppSDK;
+</script>
 
   // Splash’te takılmayı önleyen failsafe: 2.5sn sonra yine de ready dene
   const READY_TIMEOUT_MS = 2500;
