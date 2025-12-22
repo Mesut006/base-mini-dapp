@@ -561,13 +561,70 @@
               <div class="badge">Built by Mesut</div>
             </div>
           </div>
-          <div>
-            <button id="connectButton">
-              <span class="btn-label">🔗 Cüzdanı Bağla</span>
-            </button>
-          </div>
-        </div>
+         <script type="module">
+  import sdk from "https://esm.sh/@farcaster/miniapp-sdk";
+  import { ethers } from "https://esm.sh/ethers@5.7.2";
 
+  const connectBtn = document.getElementById("connectButton");
+  const walletStatus = document.getElementById("walletStatus");
+
+  function setStatus(text) {
+    walletStatus.textContent = text;
+  }
+
+  async function connectWallet() {
+    let eip1193Provider = null;
+
+    // 1️⃣ Farcaster Mini App wallet (öncelik)
+    try {
+      eip1193Provider = await sdk.wallet.getEthereumProvider();
+      console.log("Farcaster wallet provider found");
+    } catch (e) {
+      console.log("Not in Farcaster environment");
+    }
+
+    // 2️⃣ Browser fallback (MetaMask / Rabby)
+    if (!eip1193Provider && window.ethereum) {
+      eip1193Provider = window.ethereum;
+      console.log("Browser wallet fallback");
+    }
+
+    if (!eip1193Provider) {
+      setStatus("No wallet provider found.");
+      return;
+    }
+
+    const provider = new ethers.providers.Web3Provider(eip1193Provider, "any");
+
+    // Wallet connect
+    const accounts = await provider.send("eth_requestAccounts", []);
+    const address = accounts[0];
+
+    const network = await provider.getNetwork();
+
+    setStatus(
+      `Connected: ${address.slice(0, 6)}…${address.slice(-4)} | Chain: ${network.chainId}`
+    );
+
+    // Base Mainnet'e geçmeyi dene (8453)
+    if (network.chainId !== 8453) {
+      try {
+        await provider.send("wallet_switchEthereumChain", [
+          { chainId: "0x2105" }
+        ]);
+      } catch (e) {
+        console.warn("Chain switch rejected");
+      }
+    }
+  }
+
+  connectBtn.addEventListener("click", () => {
+    connectWallet().catch((err) => {
+      console.error(err);
+      setStatus("Wallet connection failed");
+    });
+  });
+</script>
         <!-- Cüzdan / Ağ Bilgisi -->
         <div class="section">
           <div class="label-row">
