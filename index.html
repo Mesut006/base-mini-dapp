@@ -588,30 +588,22 @@
 
         try {
           eip1193 = await getEip1193Provider();
-          if (!eip1193) {
-            setTopStatus("Wallet bulunamadı. Web için MetaMask/Rabby kur; Farcaster içinde Mini App olarak aç.");
-            return;
-          }
+if (!eip1193) {
+  setTopStatus("Mini App provider bulunamadı.");
+  return;
+}
+if (typeof eip1193.request !== "function") {
+  setTopStatus("Provider geldi ama request() yok. Wallet provider uyumsuz.");
+  return;
+}
 
-          web3Provider = new ethers.providers.Web3Provider(eip1193, "any");
+// accounts iste
+await eip1193.request({ method: "eth_requestAccounts", params: [] });
 
-          if (!eip1193.__hb_listeners__) {
-            eip1193.on?.("chainChanged", () => refreshState().catch(() => {}));
-            eip1193.on?.("accountsChanged", () => refreshState().catch(() => {}));
-            eip1193.__hb_listeners__ = true;
-          }
+// sonra ethers provider
+web3Provider = new ethers.providers.Web3Provider(eip1193, "any");
+await refreshState();
 
-          await web3Provider.send("eth_requestAccounts", []);
-          connectButton.querySelector(".btn-label").textContent = "Bağlı";
-          setTopStatus("Hazır ✅");
-          await refreshState();
-        } catch (e) {
-          console.error(e);
-          setTopStatus("Bağlantı hatası");
-        } finally {
-          setBtnLoading(connectButton, false);
-        }
-      }
 
       async function canSendCalls(provider, chainIdHex) {
         try {
