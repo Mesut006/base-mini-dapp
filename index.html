@@ -478,14 +478,26 @@
         }
       }
 
-      async function getEip1193Provider() {
-        const isMini = await (sdk?.isInMiniApp?.().catch(() => false));
-        if (isMini) {
-          try { return await sdk.wallet.getEthereumProvider(); } catch (e) {}
-        }
-        if (window.ethereum?.request) return window.ethereum;
-        return null;
-      }
+      aasync function getEip1193Provider() {
+  const sdk = window.__fcSdk;
+
+  // Mini App içinde: host wallet provider
+  try {
+    const isMini = await sdk?.isInMiniApp?.().catch(() => false);
+    if (isMini) {
+      const p = await sdk.wallet.getEthereumProvider();
+      return p || null;
+    }
+  } catch (e) {
+    // yut
+  }
+
+  // Normal web
+  if (window.ethereum?.request) return window.ethereum;
+
+  return null;
+}
+
 
       function loadTxHistory() {
         try {
