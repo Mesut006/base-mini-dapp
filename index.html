@@ -588,11 +588,22 @@
         }
       }
 
-      async function getEip1193Provider() {
-        try { return await sdk.wallet.getEthereumProvider(); } catch {}
-        if (window.ethereum) return window.ethereum;
-        return null;
-      }
+     async function getEip1193Provider() {
+  // 1) Web: injected wallet varsa (MetaMask/Rabby/Coinbase Wallet extension) bunu kullan
+  if (window.ethereum?.request) return window.ethereum;
+
+  // 2) Farcaster Mini App: host wallet capability varsa sdk provider al
+  try {
+    const caps = await sdk.getCapabilities?.();
+    const hasWallet = Array.isArray(caps) && caps.some((c) => c.startsWith("wallet."));
+    if (hasWallet) {
+      return await sdk.wallet.getEthereumProvider();
+    }
+  } catch {}
+
+  return null;
+}
+
 
       function loadTxHistory() {
         try {
