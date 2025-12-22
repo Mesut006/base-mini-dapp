@@ -12,7 +12,8 @@
     "name": "HelloBase Mini dApp",
     "homeUrl": "https://base-mini-dapp.vercel.app/",
     "iconUrl": "https://base-mini-dapp.vercel.app/icon.png",
-    "splashBackgroundColor": "#020617",
+    "splashImageUrl": "https://base-mini-dapp.vercel.app/icon.png",
+    "splashBackgroundColor": "#020617"
     "webhookUrl": "",
     "subtitle": "Update an onchain message on Base.",
     "description": "A simple onchain app that lets you read and update a message stored in a verified contract on Base.",
