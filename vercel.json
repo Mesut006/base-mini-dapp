@@ -3,14 +3,10 @@
   "trailingSlash": false,
   "routes": [
     { "handle": "filesystem" },
+
+    { "src": "/og\\.png", "dest": "/og.png" },
+    { "src": "/icon\\.png", "dest": "/icon.png" },
+
     { "src": "/(.*)", "dest": "/index.html" }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self' https://*.farcaster.xyz https://farcaster.xyz https://*.warpcast.com https://warpcast.com;" }
-      ]
-    }
   ]
 }
