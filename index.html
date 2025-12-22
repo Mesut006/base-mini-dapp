@@ -24,11 +24,16 @@
  <script type="module">
   import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk@0.2.1";
 
+ <script type="module">
+  import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk@0.2.1";
+
+  // ✅ Body tarafında da kullanabilmek için global'e koy
+  window.__fcSdk = sdk;
+
   // Splash'ı kapatmak için zorunlu
   await sdk.actions.ready();
 </script>
-
-  <style>
+   <style>
     :root {
       --bg: #020617;
       --bg-card: #020617;
