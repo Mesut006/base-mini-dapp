@@ -672,6 +672,59 @@
 
       loadTxHistory();
     })();
-  </script>
+  <script>
+  (function () {
+    // UI elemanı (hata mesajını burada göstereceğiz)
+    const ws = document.getElementById("walletStatus");
+    const log = (msg) => { if (ws) ws.textContent = String(msg || ""); };
+
+    // Global error yakala (splash'te kalma sebeplerini görünür yapar)
+    window.addEventListener("error", (e) => {
+      log("JS error: " + (e && e.message ? e.message : "unknown"));
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      const r = e && e.reason ? (e.reason.message || String(e.reason)) : "unknown";
+      log("Promise error: " + r);
+    });
+
+    // SDK globalini kesin yakala
+    // CDN UMD bazı ortamlarda farklı isimle gelebiliyor, hepsini deniyoruz:
+    const sdk =
+      (window.FarcasterMiniAppSDK && (window.FarcasterMiniAppSDK.sdk || window.FarcasterMiniAppSDK)) ||
+      window.miniAppSdk ||
+      window.sdk ||
+      null;
+
+    // Splash kapanması için READY
+    let readyDone = false;
+    async function safeReady(tag) {
+      if (readyDone) return;
+      readyDone = true;
+      try {
+        if (!sdk || !sdk.actions || typeof sdk.actions.ready !== "function") {
+          log("SDK yok / ready yok (" + tag + ")");
+          return;
+        }
+        await sdk.actions.ready();
+        log("ready ✅");
+      } catch (err) {
+        log("ready error: " + (err?.message || String(err)));
+      }
+    }
+
+    // 1) hemen dene
+    safeReady("immediate");
+    // 2) 1 sn sonra tekrar dene (SDK geç yüklenirse)
+    setTimeout(() => safeReady("t+1s"), 1000);
+    // 3) 2.5 sn sonra tekrar dene (failsafe)
+    setTimeout(() => safeReady("t+2.5s"), 2500);
+
+    // Ethers var mı kontrol (splash değil, sadece debug)
+    setTimeout(() => {
+      if (!window.ethers) log((ws?.textContent ? ws.textContent + " | " : "") + "ethers yok");
+    }, 1500);
+  })();
+</script>
+
 </body>
 </html>
