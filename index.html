@@ -21,8 +21,12 @@
   <!-- Ethers.js (v5 UMD) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
-  <!-- Farcaster Mini App SDK (UMD) -->
-  <script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk@latest/dist/index.umd.js"></script>
+ <script type="module">
+  import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk@0.2.1";
+
+  // Splash'ı kapatmak için zorunlu
+  await sdk.actions.ready();
+</script>
 
   <style>
     :root {
