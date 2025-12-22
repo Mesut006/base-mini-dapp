@@ -1019,12 +1019,6 @@
     });
   });
 </script>
-
-
-        signer = provider.getSigner();
-        const network = await provider.getNetwork();
-        lastNetworkChainId = network.chainId;
-
         updateNetworkWarning(network.chainId);
 
         contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
@@ -1125,6 +1119,60 @@
   try {
     await sdk.actions.ready();
   } catch {}
+<script type="module">
+  import sdk from "https://esm.sh/@farcaster/miniapp-sdk";
+  import { ethers } from "https://esm.sh/ethers@5.7.2";
+
+  const connectBtn = document.getElementById("connectButton");
+  const walletStatus = document.getElementById("walletStatus");
+
+  function setStatus(text) {
+    walletStatus.textContent = text;
+  }
+
+  async function connectWallet() {
+    let eip1193Provider = null;
+
+    // Farcaster Wallet (öncelik)
+    try {
+      eip1193Provider = await sdk.wallet.getEthereumProvider();
+      console.log("Farcaster wallet detected");
+    } catch {}
+
+    // Browser fallback
+    if (!eip1193Provider && window.ethereum) {
+      eip1193Provider = window.ethereum;
+    }
+
+    if (!eip1193Provider) {
+      setStatus("Wallet bulunamadı");
+      return;
+    }
+
+    const provider = new ethers.providers.Web3Provider(eip1193Provider, "any");
+    const accounts = await provider.send("eth_requestAccounts", []);
+    const address = accounts[0];
+    const network = await provider.getNetwork();
+
+    setStatus(
+      `Bağlandı: ${address.slice(0, 6)}…${address.slice(-4)} | Chain: ${network.chainId}`
+    );
+
+    if (network.chainId !== 8453) {
+      try {
+        await provider.send("wallet_switchEthereumChain", [
+          { chainId: "0x2105" }
+        ]);
+      } catch {}
+    }
+  }
+
+  connectBtn.addEventListener("click", () => {
+    connectWallet().catch((e) => {
+      console.error(e);
+      setStatus("Bağlantı hatası");
+    });
+  });
 </script>
 </body>
 </html>
