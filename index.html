@@ -387,7 +387,6 @@
 </head>
 
 <body>
-  <!-- Wrong network banner -->
   <div id="networkWarning" class="network-warning hidden">
     <div class="network-warning-icon">⚠️</div>
     <div class="network-warning-text" id="networkWarningText">
@@ -396,7 +395,6 @@
   </div>
 
   <div class="shell">
-    <!-- Main card -->
     <div class="card">
       <div class="card-inner">
         <div class="header-row">
@@ -497,7 +495,7 @@
         <div class="timeline">
           <div class="timeline-item">
             <div class="timeline-title">1. Cüzdanını bağlıyorsun</div>
-            <div class="timeline-sub">Farcaster SDK ile wallet provider alır, Base’e bağlanır.</div>
+            <div class="timeline-sub">Web’de injected wallet (MetaMask/Rabby) veya Farcaster SDK provider.</div>
           </div>
           <div class="timeline-item">
             <div class="timeline-title">2. Kontrattaki mesajı okuyor</div>
@@ -505,21 +503,24 @@
           </div>
           <div class="timeline-item">
             <div class="timeline-title">3. On-chain mesaj güncelleme</div>
-            <div class="timeline-sub">Tx için <code>wallet_sendCalls</code> kullanır (eth_sendTransaction yok).</div>
+            <div class="timeline-sub">Tx için <code>wallet_sendCalls</code> kullanır (<code>atomicRequired:false</code> ile).</div>
           </div>
+        </div>
+
+        <div class="hint" style="margin-top:14px;">
+          İleride buraya token, NFT, leaderboard gibi özellikler ekleyebilirsin. 💙
         </div>
       </div>
     </div>
   </div>
 
-  <!-- App logic -->
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk";
 
     (async () => {
       const ethers = window.ethers;
       if (!ethers) {
-        alert("ethers yüklenemedi (cdnjs engellenmiş olabilir).");
+        alert("ethers yüklenemedi (CDN engellenmiş olabilir).");
         return;
       }
 
@@ -556,6 +557,7 @@
       let lastChainId = null;
       let contractRead = null;
 
+      // local tx history
       let txHistory = [];
       const TX_KEY = "helloBaseTxHistory";
 
@@ -588,22 +590,14 @@
         }
       }
 
-     async function getEip1193Provider() {
-  // 1) Web: injected wallet varsa (MetaMask/Rabby/Coinbase Wallet extension) bunu kullan
-  if (window.ethereum?.request) return window.ethereum;
+      async function getEip1193Provider() {
+        // 1) Web: injected wallet varsa onu kullan
+        if (window.ethereum?.request) return window.ethereum;
 
-  // 2) Farcaster Mini App: host wallet capability varsa sdk provider al
-  try {
-    const caps = await sdk.getCapabilities?.();
-    const hasWallet = Array.isArray(caps) && caps.some((c) => c.startsWith("wallet."));
-    if (hasWallet) {
-      return await sdk.wallet.getEthereumProvider();
-    }
-  } catch {}
-
-  return null;
-}
-
+        // 2) Farcaster: host wallet provider
+        try { return await sdk.wallet.getEthereumProvider(); } catch {}
+        return null;
+      }
 
       function loadTxHistory() {
         try {
@@ -700,7 +694,7 @@
         try {
           eip1193 = await getEip1193Provider();
           if (!eip1193) {
-            setTopStatus("Wallet bulunamadı");
+            setTopStatus("Wallet bulunamadı. Web için MetaMask/Rabby kur; Farcaster içinde Mini App olarak aç.");
             return;
           }
 
@@ -747,12 +741,14 @@
           const iface = new ethers.utils.Interface(CONTRACT_ABI);
           const data = iface.encodeFunctionData("setMessage", [text]);
 
+          // ✅ atomicRequired FIX burada
           const callsId = await eip1193.request({
             method: "wallet_sendCalls",
             params: [{
               version: "2.0.0",
               chainId: EXPECTED_CHAIN_ID_HEX,
               from: address,
+              atomicRequired: false,
               calls: [{ to: CONTRACT_ADDRESS, data, value: "0x0" }]
             }]
           });
@@ -783,7 +779,7 @@
 
       loadTxHistory();
 
-      // Farcaster'da splash takılmasın: ready() çağır
+      // Farcaster splash takılmasın
       try { await sdk.actions.ready(); } catch {}
 
     })();
