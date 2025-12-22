@@ -12,7 +12,7 @@
     "name": "HelloBase Mini dApp",
     "homeUrl": "https://base-mini-dapp.vercel.app/",
     "iconUrl": "https://base-mini-dapp.vercel.app/icon.png",
-    "splashImageUrl": "https://base-mini-dapp.vercel.app/icon.png",
+    "splashImageUrl": "https://base-mini-dapp.vercel.app/splash.png",
     "splashBackgroundColor": "#020617"
     "webhookUrl": "",
     "subtitle": "Update an onchain message on Base.",
