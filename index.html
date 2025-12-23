@@ -587,40 +587,51 @@
         await readMessage();
       }
 
-      async function connectWallet() {
-        setTopStatus("Bağlanılıyor...");
-        setBtnLoading(connectButton, true);
+     async function connectWallet() {
+  setTopStatus("Bağlanılıyor...");
+  setBtnLoading(connectButton, true);
 
-        try {
-          eip1193 = await getEip1193Provider();
-if (!eip1193) {
-  setTopStatus("Mini App provider bulunamadı.");
-  return;
+  try {
+    // 1) Önce Farcaster Mini App provider
+    const sdk = window.__fcSdk;
+    let provider = null;
+
+    try {
+      const isMini = await sdk?.isInMiniApp?.().catch(() => false);
+      if (isMini) provider = await sdk.wallet.getEthereumProvider();
+    } catch (e) {}
+
+    // 2) Mini App yoksa web provider
+    if (!provider && window.ethereum?.request) provider = window.ethereum;
+
+    // 3) Provider yoksa bitti
+    if (!provider || typeof provider.request !== "function") {
+      setTopStatus("Cüzdan bulunamadı. Mini App içinde açtığından emin ol.");
+      return;
+    }
+
+    // 4) Hesap iste (asıl bağlama burası)
+    const accounts = await provider.request({ method: "eth_requestAccounts", params: [] });
+    if (!accounts || !accounts.length) {
+      setTopStatus("Cüzdan bağlanamadı (hesap gelmedi).");
+      return;
+    }
+
+    // 5) Ethers provider kur
+    eip1193 = provider;
+    web3Provider = new ethers.providers.Web3Provider(provider, "any");
+
+    connectButton.querySelector(".btn-label").textContent = "Bağlı";
+    setTopStatus("Hazır ✅");
+    await refreshState();
+  } catch (e) {
+    console.error(e);
+    setTopStatus("Bağlantı hatası: " + (e?.message || String(e)));
+  } finally {
+    setBtnLoading(connectButton, false);
+  }
 }
-if (typeof eip1193.request !== "function") {
-  setTopStatus("Provider geldi ama request() yok. Wallet provider uyumsuz.");
-  return;
-}
 
-// accounts iste
-await eip1193.request({ method: "eth_requestAccounts", params: [] });
-
-// sonra ethers provider
-web3Provider = new ethers.providers.Web3Provider(eip1193, "any");
-await refreshState();
-
-
-      async function canSendCalls(provider, chainIdHex) {
-        try {
-          const caps = await provider.request({
-            method: "wallet_getCapabilities",
-            params: [{ chainId: chainIdHex }]
-          });
-          return !!caps?.sendCalls;
-        } catch {
-          return false;
-        }
-      }
 
       async function setMessage() {
         if (!eip1193 || !address) {
