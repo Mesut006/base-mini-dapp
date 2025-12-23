@@ -258,6 +258,61 @@
     .hidden{ display:none; }
   </style>
 </head>
+<script>
+  const connectButton = document.getElementById("connectButton");
+  const walletStatus = document.getElementById("walletStatus");
+
+  function setStatus(msg) {
+    if (walletStatus) walletStatus.textContent = msg || "";
+  }
+
+  connectButton.addEventListener("click", connectWallet);
+
+  async function connectWallet() {
+    setStatus("Cüzdan aranıyor...");
+
+    try {
+      // 1) Farcaster SDK (HEAD'de eklediğimiz)
+      const sdk = window.__fcSdk;
+
+      let provider = null;
+
+      // 2) Mini App içindeysek Farcaster provider
+      if (sdk) {
+        try {
+          const isMini = await sdk.isInMiniApp();
+          if (isMini) {
+            provider = await sdk.wallet.getEthereumProvider();
+          }
+        } catch {}
+      }
+
+      // 3) Web fallback
+      if (!provider && window.ethereum) {
+        provider = window.ethereum;
+      }
+
+      if (!provider || !provider.request) {
+        setStatus("Cüzdan bulunamadı.");
+        return;
+      }
+
+      // 4) Hesap iste
+      const accounts = await provider.request({
+        method: "eth_requestAccounts"
+      });
+
+      if (!accounts || !accounts.length) {
+        setStatus("Cüzdan bağlanamadı.");
+        return;
+      }
+
+      setStatus("Bağlandı ✅ " + accounts[0].slice(0, 6) + "..." + accounts[0].slice(-4));
+    } catch (err) {
+      setStatus("Hata: " + (err.message || err));
+    }
+  }
+</script>
 
 <body>
   <div id="networkWarning" class="network-warning hidden">
