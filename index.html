@@ -755,6 +755,21 @@
     }, 1500);
   })();
 </script>
+// Ekrana yazdırma (mutlaka çalışmalı)
+function hbLog(msg) {
+  const el = document.getElementById("walletStatus");
+  if (el) el.textContent = String(msg || "");
+}
+
+// Click test fonksiyonu (onclick bunu çağıracak)
+window.__hbClickTest = () => {
+  hbLog("Buton tıklandı ✅");
+  // buradan sonra gerçek connect çalışacak
+  try { connectWallet(); } catch (e) { hbLog("connectWallet hata: " + (e?.message || String(e))); }
+};
+
+// Sayfa açılınca da yaz
+hbLog("Script çalıştı ✅");
 
 </body>
 </html>
