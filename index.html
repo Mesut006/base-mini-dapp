@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Mesut - HelloBase Mini dApp</title>
+
+  <meta name="base:app_id" content="69414c52d19763ca26ddc34d" />
+
+  <meta
+    name="fc:miniapp"
+    content='{"version":"1","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Open Mini App","action":{"type":"launch_miniapp","name":"HelloBase Dashboard","url":"https://base-mini-dapp.vercel.app/","splashImageUrl":"https://base-mini-dapp.vercel.app/icon.png","splashBackgroundColor":"#020617"}}}'
+  />
+  <meta
+    name="fc:frame"
+    content='{"version":"1","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Open Mini App","action":{"type":"launch_frame","name":"HelloBase Dashboard","url":"https://base-mini-dapp.vercel.app/","splashImageUrl":"https://base-mini-dapp.vercel.app/icon.png","splashBackgroundColor":"#020617"}}}'
+  />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+  <script type="module">
+    import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk@0.2.1";
+    window.__fcSdk = sdk;
+    await sdk.actions.ready();
+  </script>
+
+  <style>
+    :root{
+      --bg:#020617;--bg-card:#020617;--border:#1e293b;
+      --accent:#3b82f6;--text-main:#e5e7eb;--text-sub:#9ca3af;--text-muted:#6b7280;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:radial-gradient(circle at top,#1d4ed8 0,#020617 40%,#000 100%);
+      color:var(--text-main);
+      display:flex;justify-content:center;align-items:center;
+      min-height:100dvh;margin:0;padding:16px;
+    }
+    .shell{width:100%;max-width:960px;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px;}
+    @media(max-width:768px){.shell{grid-template-columns:minmax(0,1fr);}}
+    .card{
+      background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:22px;
+      box-shadow:0 22px 45px rgba(0,0,0,.75),0 0 0 1px rgba(15,23,42,.9);
+      position:relative;overflow:hidden;
+    }
+    .card::before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at top left,rgba(59,130,246,.18) 0,transparent 55%);opacity:.6;pointer-events:none;}
+    .card-inner{position:relative;z-index:1;}
+    .header-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px;}
+    .logo-pill{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;background:rgba(15,23,42,.9);border:1px solid rgba(51,65,85,.8);font-size:11px;color:var(--text-sub);}
+    .logo-circle{width:18px;height:18px;border-radius:999px;background:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.25);}
+    h1{font-size:20px;margin:0;color:#e0f2fe;letter-spacing:.02em;}
+    .subtitle{font-size:12px;color:var(--text-sub);margin-top:4px;}
+    .badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+    .badge{font-size:10px;border-radius:999px;padding:3px 9px;border:1px solid rgba(51,65,85,.9);color:var(--text-sub);background:rgba(15,23,42,.9);}
+    button{
+      background:var(--accent);border:none;border-radius:999px;color:#fff;padding:8px 16px;cursor:pointer;
+      font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+    }
+    button:disabled{background:#4b5563;cursor:not-allowed;opacity:.8;}
+    .btn-secondary{background:rgba(15,23,42,.9);border:1px solid rgba(51,65,85,.9);color:var(--text-sub);}
+    .section{margin-top:18px;}
+    .label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;}
+    .label{font-size:11px;color:var(--text-sub);text-transform:uppercase;letter-spacing:.08em;}
+    .value-box{border-radius:14px;border:1px solid var(--border);padding:10px 12px;background:rgba(15,23,42,.96);font-size:12px;min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .value-main{font-size:12px;color:var(--text-main);opacity:.9;word-break:break-all;}
+    .pill{font-size:10px;border-radius:999px;padding:3px 7px;border:1px solid rgba(55,65,81,.9);color:var(--text-sub);}
+    input{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--border);background:rgba(15,23,42,.96);color:var(--text-main);font-size:13px;outline:none;}
+    input::placeholder{color:#6b7280}
+    .status{font-size:11px;color:var(--text-sub);margin-top:4px;min-height:16px;white-space:pre-line;}
+    .hint{font-size:11px;color:var(--text-muted);margin-top:10px;}
+    .tx-list{margin-top:6px;border-radius:12px;border:1px solid var(--border);background:rgba(15,23,42,.96);padding:8px 10px;max-height:180px;overflow-y:auto;}
+    .tx-empty{font-size:11px;color:var(--text-muted);}
+    .network-warning{
+      position:fixed;top:12px;left:50%;transform:translateX(-50%);
+      max-width:960px;width:calc(100% - 32px);border-radius:14px;border:1px solid rgba(248,113,113,.6);
+      background:rgba(127,29,29,.95);color:#fee2e2;padding:8px 12px;font-size:12px;display:flex;gap:8px;align-items:flex-start;
+      box-shadow:0 18px 40px rgba(127,29,29,.7);z-index:50;
+    }
+    .hidden{display:none;}
+  </style>
+</head>
+
+<body>
+  <div id="networkWarning" class="network-warning hidden">
+    <div>⚠️</div>
+    <div id="networkWarningText">
+      This dApp is built for <strong>Base Mainnet (chainId 8453)</strong>. Please select the correct network in your wallet.
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="card">
+      <div class="card-inner">
+        <div class="header-row">
+          <div>
+            <div class="logo-pill"><div class="logo-circle"></div><span>Base • Onchain Mini dApp</span></div>
+            <h1>HelloBase Dashboard</h1>
+            <div class="subtitle">Mesut’un Base üzerindeki doğrulanmış kontratıyla cüzdanından direkt etkileşime geç.</div>
+            <div class="badge-row">
+              <div class="badge">Deployed • 0xD6e4…c8F8</div>
+              <div class="badge">Verified on BaseScan</div>
+              <div class="badge">Built by Mesut</div>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+            <button id="connectButton" type="button">
+              <span class="btn-label">Cüzdanı Bağla</span>
+            </button>
+            <div id="walletStatus" style="font-family: ui-monospace, monospace; font-size:11px; color:#9ca3af; min-height:14px;"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="label-row"><span class="label">Bağlantı durumu</span><span class="pill">EVM Wallet • Base</span></div>
+          <div class="value-box"><div class="value-main" id="walletInfoText">Bağlı değil</div></div>
+        </div>
+
+        <div class="section">
+          <div class="label-row"><span class="label">Aktif mesaj (message)</span><button class="btn-secondary" id="refreshMessageButton" type="button">Yenile</button></div>
+          <div class="value-box"><div class="value-main" id="currentMessage">-</div></div>
+        </div>
+
+        <div class="section">
+          <div class="label-row"><span class="label">Yeni mesaj yaz</span></div>
+          <input id="newMessageInput" placeholder="Örn: Merhaba Base, Mesut buradaydı ✨" />
+          <div class="label-row" style="margin-top: 10px;">
+            <div class="status" id="txStatus"></div>
+            <button id="setMessageButton" type="button" disabled>
+              <span class="btn-label">Mesajı Güncelle</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="hint">Buton pasifse, altta sebebini yazacağım.</div>
+
+        <div class="section">
+          <div class="label-row"><span class="label">Son 5 işlem</span><span class="pill">History</span></div>
+          <div class="tx-list" id="txList"><div class="tx-empty">Henüz işlem yok.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-inner">
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Bu mini dApp ne yapıyor?</div>
+        <div class="hint">Cüzdan bağla → Mesaj yaz → Base’de kontrata gönder.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const ethers = window.ethers;
+      if (!ethers) { alert("ethers yüklenemedi."); return; }
+
+      const EXPECTED_CHAIN_ID = 8453;
+      const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
+      const CONTRACT_ABI = [
+        {"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"name":"newMessage","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}
+      ];
+
+      const connectButton = document.getElementById("connectButton");
+      const walletStatus = document.getElementById("walletStatus");
+      const walletInfoText = document.getElementById("walletInfoText");
+      const refreshMessageButton = document.getElementById("refreshMessageButton");
+      const currentMessageEl = document.getElementById("currentMessage");
+      const newMessageInput = document.getElementById("newMessageInput");
+      const setMessageButton = document.getElementById("setMessageButton");
+      const txStatus = document.getElementById("txStatus");
+      const networkWarning = document.getElementById("networkWarning");
+      const networkWarningText = document.getElementById("networkWarningText");
+      const txList = document.getElementById("txList");
+
+      let eip1193 = null;
+      let web3Provider = null;
+      let address = null;
+      let lastChainId = null;
+      let contractRead = null;
+
+      const TX_KEY = "helloBaseTxHistory";
+      let txHistory = [];
+
+      function setTopStatus(t){ walletStatus.textContent = t || ""; }
+      function shortAddr(a){ return a ? (a.slice(0,6)+"…"+a.slice(-4)) : ""; }
+
+      function loadTxHistory() {
+        try { txHistory = JSON.parse(localStorage.getItem(TX_KEY) || "[]") || []; } catch { txHistory = []; }
+        renderTxHistory();
+      }
+      function saveTxHistory() {
+        try { localStorage.setItem(TX_KEY, JSON.stringify(txHistory)); } catch {}
+      }
+      function renderTxHistory() {
+        if (!txHistory.length) { txList.innerHTML = '<div class="tx-empty">Henüz işlem yok.</div>'; return; }
+        txList.innerHTML = txHistory.map(x => '<div class="tx-empty">'+x+'</div>').join("");
+      }
+
+      function updateNetworkWarning() {
+        if (lastChainId !== null && lastChainId !== EXPECTED_CHAIN_ID) {
+          networkWarning.classList.remove("hidden");
+          networkWarningText.innerHTML =
+            "This dApp is built for <strong>Base Mainnet (chainId 8453)</strong>. " +
+            "Current connected chainId: <strong>" + lastChainId + "</strong>.";
+        } else {
+          networkWarning.classList.add("hidden");
+        }
+      }
+
+      function updateActionButtons() {
+        const mesajVarMi = newMessageInput.value.trim().length > 0;
+        const cuzdanBagliMi = !!address;
+        const baseMi = lastChainId === EXPECTED_CHAIN_ID;
+
+        setMessageButton.disabled = !(mesajVarMi && cuzdanBagliMi && baseMi);
+
+        if (!mesajVarMi) txStatus.textContent = "Mesaj kutusu boş";
+        else if (!cuzdanBagliMi) txStatus.textContent = "Cüzdan bağlı değil";
+        else if (!baseMi) txStatus.textContent = "Base ağına geçmen gerekiyor (chainId: " + (lastChainId ?? "?") + ")";
+        else txStatus.textContent = "Hazır ✅";
+      }
+
+      async function getProvider() {
+        // Mini App
+        const sdk = window.__fcSdk;
+        try {
+          const isMini = await (sdk?.isInMiniApp?.().catch(() => false));
+          if (isMini) {
+            const p = await sdk.wallet.getEthereumProvider();
+            if (p?.request) return p;
+          }
+        } catch {}
+        // Web
+        if (window.ethereum?.request) return window.ethereum;
+        return null;
+      }
+
+      async function refreshState() {
+        if (!web3Provider) { updateActionButtons(); return; }
+
+        const accounts = await web3Provider.listAccounts();
+        address = accounts?.[0] || null;
+
+        const net = await web3Provider.getNetwork();
+        lastChainId = net.chainId;
+
+        walletInfoText.textContent = address
+          ? ("Ağ chainId: " + lastChainId + " | Cüzdan: " + shortAddr(address))
+          : "Bağlı değil";
+
+        updateNetworkWarning();
+
+        if (address) {
+          contractRead = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, web3Provider);
+          readMessage().catch(()=>{});
+        }
+
+        updateActionButtons();
+      }
+
+      async function readMessage() {
+        if (!contractRead) return;
+        try {
+          const msg = await contractRead.message();
+          currentMessageEl.textContent = msg || "(Boş)";
+        } catch {
+          currentMessageEl.textContent = "Mesaj okunamadı";
+        }
+      }
+
+      async function connectWallet() {
+        setTopStatus("Bağlanılıyor...");
+        try {
+          eip1193 = await getProvider();
+          if (!eip1193) { setTopStatus("Provider yok"); return; }
+
+          await eip1193.request({ method: "eth_requestAccounts", params: [] });
+          web3Provider = new ethers.providers.Web3Provider(eip1193, "any");
+
+          setTopStatus("Hazır ✅");
+          await refreshState();
+        } catch (e) {
+          setTopStatus("Bağlantı hatası: " + (e?.message || String(e)));
+        }
+      }
+
+      async function setMessage() {
+        if (!address) { txStatus.textContent = "Cüzdan bağlı değil"; return; }
+        if (lastChainId !== EXPECTED_CHAIN_ID) { txStatus.textContent = "Base ağına geç"; return; }
+
+        const text = newMessageInput.value.trim();
+        if (!text) { txStatus.textContent = "Mesaj boş"; return; }
+
+        txStatus.textContent = "Onay bekleniyor...";
+        try {
+          const iface = new ethers.utils.Interface(CONTRACT_ABI);
+          const data = iface.encodeFunctionData("setMessage", [text]);
+
+          // ✅ En uyumlu yöntem
+          const txHash = await eip1193.request({
+            method: "eth_sendTransaction",
+            params: [{
+              from: address,
+              to: CONTRACT_ADDRESS,
+              data,
+              value: "0x0"
+            }]
+          });
+
+          txHistory.unshift(String(txHash || ("tx-" + Date.now())));
+          txHistory = txHistory.slice(0,5);
+          saveTxHistory();
+          renderTxHistory();
+
+          txStatus.textContent = "İşlem gönderildi ✅";
+          newMessageInput.value = "";
+          await readMessage();
+        } catch (e) {
+          txStatus.textContent = "İşlem hatası: " + (e?.message || String(e));
+        }
+      }
+
+      connectButton.addEventListener("click", connectWallet);
+      refreshMessageButton.addEventListener("click", () => readMessage().catch(()=>{}));
+      setMessageButton.addEventListener("click", setMessage);
+      newMessageInput.addEventListener("input", updateActionButtons);
+
+      loadTxHistory();
+      updateActionButtons(); // ✅ sayfa açılınca sebebi yaz
+    })();
+  </script>
+</body>
+</html>
