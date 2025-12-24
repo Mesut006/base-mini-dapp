@@ -118,7 +118,15 @@
         </div>
 
         <div class="section">
-          <div class="label-row"><span class="label">Aktif mesaj (message)</span><button class="btn-secondary" id="refreshMessageButton" type="button">Yenile</button></div>
+          <div class="label-row"><span class="label">Aktif mesaj (message)</span><button
+        class="btn-secondary"
+        id="refreshMessageButton"
+        type="button"
+        onclick="window.__forceRefreshMessage()"
+        >
+        Yenile
+        </button>
+
           <div class="value-box"><div class="value-main" id="currentMessage">-</div></div>
         </div>
 
