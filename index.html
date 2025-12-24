@@ -359,16 +359,31 @@
       loadTxHistory();
       updateActionButtons(); // ✅ sayfa açılınca sebebi yaz
     })();
-    window.__forceRefreshMessage = async function () {
+   window.__forceRefreshMessage = async function () {
   try {
+    if (!currentMessageEl) {
+      txStatus.textContent = "Hata: mesaj kutusu (currentMessage) bulunamadı.";
+      return;
+    }
+
     txStatus.textContent = "Yenileniyor...";
+    if (typeof currentMessageBox !== "undefined" && currentMessageBox) {
+      currentMessageBox.classList.add("shimmer");
+    }
+
     const msg = await contractReadBase.message();
     currentMessageEl.textContent = msg || "(Boş)";
+
     txStatus.textContent = "Güncellendi ✅";
   } catch (e) {
-    txStatus.textContent = "Yenileme hatası";
+    txStatus.textContent = "Yenileme hatası: " + (e?.message || String(e));
+  } finally {
+    if (typeof currentMessageBox !== "undefined" && currentMessageBox) {
+      currentMessageBox.classList.remove("shimmer");
+    }
   }
 };
+
 
   </script>
 </body>
