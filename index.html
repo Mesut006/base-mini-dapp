@@ -851,6 +851,8 @@ setMessageButton.disabled = !(address && lastChainId === EXPECTED_CHAIN_ID && ha
       refreshMessageButton.addEventListener("click", readMessage);
       setMessageButton.addEventListener("click", setMessage);
 
+    updateActionButtons();
+    
       // input yazınca buton aktifleşsin (cüzdan bağlanınca zaten chain kontrolü var)
       newMessageInput.addEventListener("input", () => {
   const hasText = newMessageInput.value.trim().length > 0;
