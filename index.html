@@ -467,5 +467,15 @@ a:visited { color: inherit; }
       window.__forceRefreshMessage().catch(()=>{});
     })();
   </script>
+<script type="module">
+  import sdk from "https://esm.sh/@farcaster/miniapp-sdk";
+
+  try {
+    await sdk.actions.ready();
+    console.log("Mini App is ready");
+  } catch (e) {
+    console.warn("Ready call failed", e);
+  }
+</script>
 </body>
 </html>
