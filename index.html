@@ -827,8 +827,10 @@ setMessageButton.disabled = !(address && lastChainId === EXPECTED_CHAIN_ID && ha
 
       // input yazınca buton aktifleşsin (cüzdan bağlanınca zaten chain kontrolü var)
       newMessageInput.addEventListener("input", () => {
-        if (!address) return;
-        setMessageButton.disabled = !(newMessageInput.value.trim().length > 0) || (lastChainId !== EXPECTED_CHAIN_ID);
+  const hasText = newMessageInput.value.trim().length > 0;
+  setMessageButton.disabled = !(address && lastChainId === EXPECTED_CHAIN_ID && hasText);
+});
+
       });
 
       loadTxHistory();
