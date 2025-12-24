@@ -752,6 +752,7 @@ setMessageButton.disabled = !(address && lastChainId === EXPECTED_CHAIN_ID && ha
           connectButton.querySelector(".btn-label").textContent = "Bağlı";
           setTopStatus("Hazır ✅");
           await refreshState();
+       updateActionButtons();
         } catch (e) {
           console.error(e);
           setTopStatus("Bağlantı hatası: " + (e && e.message ? e.message : String(e)));
