@@ -21,7 +21,7 @@
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk@0.2.1";
     window.__fcSdk = sdk;
-    await sdk.actions.ready();
+    try { await sdk.actions.ready(); } catch {}
   </script>
 
   <style>
@@ -70,7 +70,7 @@
     .status{font-size:11px;color:var(--text-sub);margin-top:4px;min-height:16px;white-space:pre-line;}
     .hint{font-size:11px;color:var(--text-muted);margin-top:10px;}
     .tx-list{margin-top:6px;border-radius:12px;border:1px solid var(--border);background:rgba(15,23,42,.96);padding:8px 10px;max-height:180px;overflow-y:auto;}
-    .tx-empty{font-size:11px;color:var(--text-muted);}
+    .tx-empty{font-size:11px;color:var(--text-muted);word-break:break-all;}
     .network-warning{
       position:fixed;top:12px;left:50%;transform:translateX(-50%);
       max-width:960px;width:calc(100% - 32px);border-radius:14px;border:1px solid rgba(248,113,113,.6);
@@ -78,6 +78,13 @@
       box-shadow:0 18px 40px rgba(127,29,29,.7);z-index:50;
     }
     .hidden{display:none;}
+    .shimmer{
+      position:relative;overflow:hidden;
+      background:linear-gradient(90deg, rgba(15,23,42,.96) 0%, rgba(30,64,175,.7) 50%, rgba(15,23,42,.96) 100%);
+      background-size:200% 100%;
+      animation: shimmer-move 1.2s ease-in-out infinite;
+    }
+    @keyframes shimmer-move { 0%{background-position:-150% 0} 100%{background-position:150% 0} }
   </style>
 </head>
 
@@ -105,9 +112,7 @@
           </div>
 
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
-            <button id="connectButton" type="button">
-              <span class="btn-label">Cüzdanı Bağla</span>
-            </button>
+            <button id="connectButton" type="button"><span class="btn-label">Cüzdanı Bağla</span></button>
             <div id="walletStatus" style="font-family: ui-monospace, monospace; font-size:11px; color:#9ca3af; min-height:14px;"></div>
           </div>
         </div>
@@ -118,26 +123,13 @@
         </div>
 
         <div class="section">
-  <div class="label-row">
-    <span class="label">Aktif mesaj (message)</span>
-
-    <button
-      class="btn-secondary"
-      id="refreshMessageButton"
-      type="button"
-      onclick="window.__forceRefreshMessage()"
-    >
-      Yenile
-    </button>
-  </div>
-
-  <div class="value-box" id="currentMessageBox">
-    <div class="value-main" id="currentMessage">-</div>
-  </div>
-
-   <div class="status" id="txStatus"></div>
-</div>
- <div class="value-box"><div class="value-main" id="currentMessage">-</div></div>
+          <div class="label-row">
+            <span class="label">Aktif mesaj (message)</span>
+            <button class="btn-secondary" id="refreshMessageButton" type="button" onclick="window.__forceRefreshMessage()">Yenile</button>
+          </div>
+          <div class="value-box" id="currentMessageBox">
+            <div class="value-main" id="currentMessage">-</div>
+          </div>
         </div>
 
         <div class="section">
@@ -145,9 +137,7 @@
           <input id="newMessageInput" placeholder="Örn: Merhaba Base, Mesut buradaydı ✨" />
           <div class="label-row" style="margin-top: 10px;">
             <div class="status" id="txStatus"></div>
-            <button id="setMessageButton" type="button" disabled>
-              <span class="btn-label">Mesajı Güncelle</span>
-            </button>
+            <button id="setMessageButton" type="button" disabled><span class="btn-label">Mesajı Güncelle</span></button>
           </div>
         </div>
 
@@ -176,28 +166,19 @@
       const EXPECTED_CHAIN_ID = 8453;
       const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
       const CONTRACT_ABI = [
-      // ✅ SADECE OKUMA İÇİN Base RPC
-// const READ_RPC = "https://mainnet.base.org";
-// const readProvider = new ethers.providers.JsonRpcProvider(READ_RPC);
-// const contractReadBase = new ethers.Contract(
-//   CONTRACT_ADDRESS,
-//   CONTRACT_ABI,
-//   readProvider
-// );
-
-  {"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},
+        {"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},
         {"inputs":[{"name":"newMessage","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}
       ];
+
+      // ✅ Read (yenile) her zaman Base RPC'den
+      const READ_RPC = "https://base-rpc.publicnode.com";
+      const readProvider = new ethers.providers.JsonRpcProvider(READ_RPC);
+      const contractReadBase = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, readProvider);
+      window.__contractReadBase = contractReadBase;
 
       const connectButton = document.getElementById("connectButton");
       const walletStatus = document.getElementById("walletStatus");
       const walletInfoText = document.getElementById("walletInfoText");
-      const refreshMessageButton = document.getElementById("refreshMessageButton");
-      const currentMessageEl = document.getElementById("currentMessage");
-      // ✅ Yenile butonu her zaman aktif olsun
-      refreshMessageButton.disabled = false;
-      refreshMessageButton.style.pointerEvents = "auto";
-      refreshMessageButton.style.opacity = "1";
       const newMessageInput = document.getElementById("newMessageInput");
       const setMessageButton = document.getElementById("setMessageButton");
       const txStatus = document.getElementById("txStatus");
@@ -205,11 +186,13 @@
       const networkWarningText = document.getElementById("networkWarningText");
       const txList = document.getElementById("txList");
 
+      const currentMessageEl = document.getElementById("currentMessage");
+      const currentMessageBox = document.getElementById("currentMessageBox");
+
       let eip1193 = null;
       let web3Provider = null;
       let address = null;
       let lastChainId = null;
-      let contractRead = null;
 
       const TX_KEY = "helloBaseTxHistory";
       let txHistory = [];
@@ -254,7 +237,6 @@
       }
 
       async function getProvider() {
-        // Mini App
         const sdk = window.__fcSdk;
         try {
           const isMini = await (sdk?.isInMiniApp?.().catch(() => false));
@@ -263,7 +245,6 @@
             if (p?.request) return p;
           }
         } catch {}
-        // Web
         if (window.ethereum?.request) return window.ethereum;
         return null;
       }
@@ -282,23 +263,7 @@
           : "Bağlı değil";
 
         updateNetworkWarning();
-
-        if (address) {
-          contractRead = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, web3Provider);
-          readMessage().catch(()=>{});
-        }
-
         updateActionButtons();
-      }
-
-      async function readMessage() {
-        if (!contractRead) return;
-        try {
-          const msg = await contractRead.message();
-          currentMessageEl.textContent = msg || "(Boş)";
-        } catch {
-          currentMessageEl.textContent = "Mesaj okunamadı";
-        }
       }
 
       async function connectWallet() {
@@ -329,7 +294,6 @@
           const iface = new ethers.utils.Interface(CONTRACT_ABI);
           const data = iface.encodeFunctionData("setMessage", [text]);
 
-          // ✅ En uyumlu yöntem
           const txHash = await eip1193.request({
             method: "eth_sendTransaction",
             params: [{
@@ -345,25 +309,50 @@
           saveTxHistory();
           renderTxHistory();
 
-          txStatus.textContent = "İşlem gönderildi ✅";
+          txStatus.textContent = "İşlem gönderildi ✅ (onay bekleniyor...)";
           newMessageInput.value = "";
-          await readMessage();
+          updateActionButtons();
+
+          try { await readProvider.waitForTransaction(txHash, 1, 60000); } catch {}
+          await window.__forceRefreshMessage();
         } catch (e) {
           txStatus.textContent = "İşlem hatası: " + (e?.message || String(e));
         }
       }
 
+      // ✅ window üstünden güvenli yenile
+      window.__forceRefreshMessage = async function () {
+        try {
+          const el = document.getElementById("currentMessage");
+          const box = document.getElementById("currentMessageBox");
+          const status = document.getElementById("txStatus");
+
+          if (!el) { if (status) status.textContent = "Hata: #currentMessage yok"; return; }
+
+          if (status) status.textContent = "Yenileniyor...";
+          if (box) box.classList.add("shimmer");
+
+          const msg = await window.__contractReadBase.message();
+          el.textContent = msg || "(Boş)";
+
+          if (status) status.textContent = "Güncellendi ✅";
+        } catch (e) {
+          const status = document.getElementById("txStatus");
+          if (status) status.textContent = "Yenileme hatası: " + (e?.message || String(e));
+        } finally {
+          const box = document.getElementById("currentMessageBox");
+          if (box) box.classList.remove("shimmer");
+        }
+      };
+
       connectButton.addEventListener("click", connectWallet);
-      refreshMessageButton.addEventListener("click", () => readMessage().catch(()=>{}));
       setMessageButton.addEventListener("click", setMessage);
       newMessageInput.addEventListener("input", updateActionButtons);
 
       loadTxHistory();
-      updateActionButtons(); // ✅ sayfa açılınca sebebi yaz
+      updateActionButtons();
+      window.__forceRefreshMessage().catch(()=>{});
     })();
-  __forceRefreshMessage
-
-
   </script>
 </body>
 </html>
