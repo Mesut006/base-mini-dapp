@@ -694,9 +694,7 @@
 
         walletInfoText.textContent = "Ağ chainId: " + lastChainId + " | Cüzdan: " + shortAddr(address);
         setWalletVisual(address);
-
-        setMessageButton.disabled = (lastChainId !== EXPECTED_CHAIN_ID);
-
+        
         contractRead = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, web3Provider);
         await readMessage();
       }
