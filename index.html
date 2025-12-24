@@ -697,7 +697,10 @@
         
         contractRead = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, web3Provider);
         await readMessage();
-      }
+     // ✅ setMessage butonunu doğru şekilde yönet
+const hasText = (newMessageInput.value.trim().length > 0);
+setMessageButton.disabled = !(address && lastChainId === EXPECTED_CHAIN_ID && hasText);
+ }
 
       async function connectWallet() {
         setTopStatus("Bağlanılıyor...");
