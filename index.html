@@ -549,6 +549,31 @@
       const setMessageButton = document.getElementById("setMessageButton");
       const txStatus = document.getElementById("txStatus");
       const txList = document.getElementById("txList");
+     
+      function updateActionButtons() {
+  // mesaj kutusunda yazı var mı?
+  const mesajVarMi = newMessageInput.value.trim().length > 0;
+
+  // cüzdan bağlı mı?
+  const cuzdanBagliMi = address !== null;
+
+  // ağ Base mi?
+  const baseMi = lastChainId === EXPECTED_CHAIN_ID;
+
+  // BUTON AKTİF / PASİF
+  setMessageButton.disabled = !(mesajVarMi && cuzdanBagliMi && baseMi);
+
+  // ekrana sebep yaz
+  if (!mesajVarMi) {
+    txStatus.textContent = "Mesaj kutusu boş";
+  } else if (!cuzdanBagliMi) {
+    txStatus.textContent = "Cüzdan bağlı değil";
+  } else if (!baseMi) {
+    txStatus.textContent = "Base ağına geçmen gerekiyor";
+  } else {
+    txStatus.textContent = "Hazır ✅ Mesaj gönderebilirsin";
+  }
+}
 
       const networkWarning = document.getElementById("networkWarning");
       const networkWarningText = document.getElementById("networkWarningText");
