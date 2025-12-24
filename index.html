@@ -351,6 +351,17 @@
       loadTxHistory();
       updateActionButtons(); // ✅ sayfa açılınca sebebi yaz
     })();
+    window.__forceRefreshMessage = async function () {
+  try {
+    txStatus.textContent = "Yenileniyor...";
+    const msg = await contractReadBase.message();
+    currentMessageEl.textContent = msg || "(Boş)";
+    txStatus.textContent = "Güncellendi ✅";
+  } catch (e) {
+    txStatus.textContent = "Yenileme hatası";
+  }
+};
+
   </script>
 </body>
 </html>
