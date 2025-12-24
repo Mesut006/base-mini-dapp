@@ -734,18 +734,6 @@
         }
       }
 
-      async function canSendCalls(provider, chainIdHex) {
-        try {
-          const caps = await provider.request({
-            method: "wallet_getCapabilities",
-            params: [{ chainId: chainIdHex }]
-          });
-          return !!(caps && caps.sendCalls);
-        } catch {
-          return false;
-        }
-      }
-
       async function setMessage() {
         if (!eip1193 || !address) {
           txStatus.textContent = "Önce cüzdanı bağlamalısın.";
@@ -766,11 +754,35 @@
         txStatus.textContent = "Cüzdanda onay bekleniyor...";
 
         try {
-          const iface = new ethers.utils.Interface(CONTRACT_ABI);
-          const data = iface.encodeFunctionData("setMessage", [text]);
+  const iface = new ethers.utils.Interface(CONTRACT_ABI);
+  const data = iface.encodeFunctionData("setMessage", [text]);
 
-          const okSendCalls = await canSendCalls(eip1193, EXPECTED_CHAIN_ID_HEX);
+  // ✅ HER PROVIDER'DA ÇALIŞAN YÖNTEM: eth_sendTransaction
+  const txHash = await eip1193.request({
+    method: "eth_sendTransaction",
+    params: [{
+      from: address,
+      to: CONTRACT_ADDRESS,
+      data: data,
+      value: "0x0"
+    }]
+  });
 
+  const idStr = String(txHash || (crypto?.randomUUID?.() || (Date.now() + "-" + Math.random())));
+  txHistory.unshift({ id: idStr, kind: "tx", chainId: lastChainId, timestamp: Date.now() });
+  txHistory = txHistory.slice(0, 5);
+  saveTxHistory();
+  renderTxHistory();
+
+  txStatus.textContent = "İşlem gönderildi ✅";
+  newMessageInput.value = "";
+  await readMessage();
+  setTimeout(() => (txStatus.textContent = ""), 3500);
+} catch (e) {
+  console.error(e);
+  const msg = e?.data?.message || e?.error?.message || e?.message || String(e);
+  txStatus.textContent = "İşlem hatası: " + msg;
+}
           if (okSendCalls) {
             const callsId = await eip1193.request({
               method: "wallet_sendCalls",
