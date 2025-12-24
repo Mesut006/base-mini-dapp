@@ -159,13 +159,14 @@
       const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
       const CONTRACT_ABI = [
       // ✅ SADECE OKUMA İÇİN Base RPC
-const READ_RPC = "https://mainnet.base.org";
-const readProvider = new ethers.providers.JsonRpcProvider(READ_RPC);
-const contractReadBase = new ethers.Contract(
-  CONTRACT_ADDRESS,
-  CONTRACT_ABI,
-  readProvider
-);
+// const READ_RPC = "https://mainnet.base.org";
+// const readProvider = new ethers.providers.JsonRpcProvider(READ_RPC);
+// const contractReadBase = new ethers.Contract(
+//   CONTRACT_ADDRESS,
+//   CONTRACT_ABI,
+//   readProvider
+// );
+
   {"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},
         {"inputs":[{"name":"newMessage","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}
       ];
