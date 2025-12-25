@@ -4,12 +4,18 @@
     "payload": "....",
     "signature": "...."
   },
-  "miniapp": {
-    "version": "1",
-    "name": "HelloBase Dashboard",
-    "homeUrl": "https://base-mini-dapp.vercel.app/",
-    "iconUrl": "https://base-mini-dapp.vercel.app/icon.png",
-    "splashImageUrl": "https://base-mini-dapp.vercel.app/icon.png",
-    "splashBackgroundColor": "#020617"
-  }
+"miniapp": {
+  "version": "1",
+  "name": "HelloBase Dashboard",
+  "homeUrl": "https://base-mini-dapp.vercel.app/",
+  "iconUrl": "https://base-mini-dapp.vercel.app/icon.png",
+  "splashImageUrl": "https://base-mini-dapp.vercel.app/icon.png",
+  "splashBackgroundColor": "#020617",
+  "subtitle": "On-chain mesaj dashboard",
+  "description": "Base üzerinde çalışan mini dApp. Cüzdan bağla, mesaj oku ve güncelle.",
+  "primaryCategory": "developer-tools",
+  "tags": ["base", "miniapp", "onchain"],
+  "ogTitle": "HelloBase Dashboard",
+  "ogDescription": "Base Mini App • On-chain mesajlar",
+  "ogImageUrl": "https://base-mini-dapp.vercel.app/og.png"
 }
