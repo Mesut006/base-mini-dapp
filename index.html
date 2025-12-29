@@ -468,21 +468,21 @@ a:visited { color: inherit; }
     })();
   </script>
 <script type="module">
-  // En güncel ve Base App ile uyumlu SDK sürümü
   import { sdk } from "https://esm.sh/@farcaster/frame-sdk@0.0.24";
+  
+  // SDK'yı globale kaydediyoruz ki diğer scriptler erişebilsin
+  window.__fcSdk = sdk;
 
-  async function startApp() {
+  async function init() {
     try {
-      // Bu komut Base App'e "yükleme bitti, beni Mini App olarak kaydedebilirsin" der
+      // Base App'e "hazırım" diyoruz
       await sdk.actions.ready();
-      console.log("Mini App Ready Signal Sent");
-    } catch (e) {
-      console.error("SDK Error:", e);
+      console.log("Farcaster SDK Ready");
+    } catch (error) {
+      console.error("SDK Ready hatası:", error);
     }
   }
-
-  startApp();
-  window.__fcSdk = sdk;
+  init();
 </script>
 </body>
 </html>
