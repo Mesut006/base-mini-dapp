@@ -1,6 +1,23 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+  <head>
+  <script type="module">
+    import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
+    
+    // SDK'yı en başta hazır hale getiriyoruz
+    const init = async () => {
+      try {
+        await sdk.actions.ready(); // Sinyali hemen gönderiyoruz
+        console.log("Base App: Ready signal sent early!");
+      } catch (e) {
+        console.error("SDK hatası:", e);
+      }
+    };
+    init();
+    window.__fcSdk = sdk; // Diğer scriptlerin kullanabilmesi için globale ekliyoruz
+  </script>
+</head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
    <meta name="base:app_id" content="69414c52d19763ca26ddc34d" />
@@ -19,12 +36,6 @@
   />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-
-  <script type="module">
-    import { sdk } from "https://esm.sh/@farcaster/miniapp-sdk@0.2.1";
-    window.__fcSdk = sdk;
-    try { await sdk.actions.ready(); } catch {}
-  </script>
 
   <style>
     :root{
