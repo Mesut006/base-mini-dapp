@@ -477,23 +477,7 @@ a:visited { color: inherit; }
       updateActionButtons();
       window.__forceRefreshMessage().catch(()=>{});
     })();
-  </script>
-<script type="module">
-  import { sdk } from "https://esm.sh/@farcaster/frame-sdk@0.0.24";
-  
-  // SDK'yı globale kaydediyoruz ki diğer scriptler erişebilsin
-  window.__fcSdk = sdk;
 
-  async function init() {
-    try {
-      // Base App'e "hazırım" diyoruz
-      await sdk.actions.ready();
-      console.log("Farcaster SDK Ready");
-    } catch (error) {
-      console.error("SDK Ready hatası:", error);
-    }
-  }
-  init();
 </script>
 </body>
 </html>
