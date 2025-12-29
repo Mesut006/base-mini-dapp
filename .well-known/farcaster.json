@@ -1,9 +1,10 @@
-{
-  "accountAssociation": {
-    "header": "....",
-    "payload": "....",
-    "signature": "...."
   },
+  "accountAssociation": {
+    "header": "eyJmaWQiOjI5MDkzNSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDY1YkRlMzY1MzhCNzBGMEVDOGI2MjJCOERCNzU5ODE0MDU1ODdhRjQifQ",
+    "payload": "eyJkb21haW4iOiJiYXNlLW1pbmktZGFwcC52ZXJjZWwuYXBwIn0",
+    "signature": "Fm1Ot2LiePhj5TzvRpe+s+6pOrrdWOaY1n32GaU/HbJtWT35HHak2tMk0ITmjqnkOupDaXcOYAjSoSfsuGNN2hw="
+  }
+},
 "miniapp": {
   "version": "1",
   "name": "HelloBase Dashboard",
