@@ -1,22 +1,22 @@
-  },
+{
   "accountAssociation": {
-    "header": "eyJmaWQiOjI5MDkzNSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDY1YkRlMzY1MzhCNzBGMEVDOGI2MjJCOERCNzU5ODE0MDU1ODdhRjQifQ",
+    "header": "eyJwYXJlbnRfaWRzIjpbImkzZGN5NW1idW1zZSI6ImF1dGg6Ijc3ZkXzI0IiwiYWRyIjpkcm1yY1MzhCNzBGMUVDOGI2MjJCOERCNzU5ODE0MDU1ODRjIn1Q",
     "payload": "eyJkb21haW4iOiJiYXNlLW1pbmktZGFwcC52ZXJjZWwuYXBwIn0",
-    "signature": "Fm1Ot2LiePhj5TzvRpe+s+6pOrrdWOaY1n32GaU/HbJtWT35HHak2tMk0ITmjqnkOupDaXcOYAjSoSfsuGNN2hw="
+    "signature": "fm1DL2LiePhjSizvRpe+++8pOrrdvUeYln5Z9uU/HbITWT55Mwzk2tMk0ITmjqnkDupUaXcXOYAjSuSfsuWNN2Hw"
+  },
+  "frame": {
+    "version": "1",
+    "name": "HelloBase Dashboard",
+    "homeUrl": "https://base-mini-dapp.vercel.app/",
+    "iconUrl": "https://base-mini-dapp.vercel.app/icon.png",
+    "splashImageUrl": "https://base-mini-dapp.vercel.app/icon.png",
+    "splashBackgroundColor": "#020617",
+    "subtitle": "On-chain mesaj dashboard",
+    "description": "Base üzerinde çalışan mini dApp. Cüzdan bağla, mesaj oku ve güncelle.",
+    "primaryCategory": "developer-tools",
+    "tags": ["base", "miniapp", "onchain"],
+    "ogTitle": "HelloBase Dashboard",
+    "ogDescription": "Base Mini App • On-chain mesajlar",
+    "ogImageUrl": "https://base-mini-dapp.vercel.app/og.png"
   }
-},
-"miniapp": {
-  "version": "1",
-  "name": "HelloBase Dashboard",
-  "homeUrl": "https://base-mini-dapp.vercel.app/",
-  "iconUrl": "https://base-mini-dapp.vercel.app/icon.png",
-  "splashImageUrl": "https://base-mini-dapp.vercel.app/icon.png",
-  "splashBackgroundColor": "#020617",
-  "subtitle": "On-chain mesaj dashboard",
-  "description": "Base üzerinde çalışan mini dApp. Cüzdan bağla, mesaj oku ve güncelle.",
-  "primaryCategory": "developer-tools",
-  "tags": ["base", "miniapp", "onchain"],
-  "ogTitle": "HelloBase Dashboard",
-  "ogDescription": "Base Mini App • On-chain mesajlar",
-  "ogImageUrl": "https://base-mini-dapp.vercel.app/og.png"
 }
