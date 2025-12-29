@@ -468,14 +468,21 @@ a:visited { color: inherit; }
     })();
   </script>
 <script type="module">
-  import sdk from "https://esm.sh/@farcaster/miniapp-sdk";
+  // En güncel ve Base App ile uyumlu SDK sürümü
+  import { sdk } from "https://esm.sh/@farcaster/frame-sdk@0.0.24";
 
-  try {
-    await sdk.actions.ready();
-    console.log("Mini App is ready");
-  } catch (e) {
-    console.warn("Ready call failed", e);
+  async function startApp() {
+    try {
+      // Bu komut Base App'e "yükleme bitti, beni Mini App olarak kaydedebilirsin" der
+      await sdk.actions.ready();
+      console.log("Mini App Ready Signal Sent");
+    } catch (e) {
+      console.error("SDK Error:", e);
+    }
   }
+
+  startApp();
+  window.__fcSdk = sdk;
 </script>
 </body>
 </html>
