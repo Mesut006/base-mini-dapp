@@ -50,9 +50,9 @@
       <div id="currentMsg" style="margin-top:8px; font-weight:600;">Yükleniyor...</div>
     </div>
 
-    <input type="text" id="msgInput" placeholder="Mesajınızı yazın...">
+    <input type="text" id="msgInput" placeholder="Yeni mesaj...">
     <button id="sendBtn" style="width:100%;" disabled>Mesajı Güncelle</button>
-    <div id="status" style="font-size:11px; margin-top:10px; text-align:center; color:var(--sub);"></div>
+    <div id="status" style="font-size:11px; margin-top:10px; text-align:center; color:var(--sub); background:rgba(255,255,255,0.05); padding:5px; border-radius:8px;"></div>
 
     <div style="margin-top:20px;">
       <span style="font-size:10px; color:var(--sub);">İŞLEM GEÇMİŞİ (SON 5)</span>
@@ -84,38 +84,62 @@
 
   let provider, signer, account;
 
-  // Bağlantı fonksiyonu tamamen güncellendi
   async function connect() {
     const status = document.getElementById("status");
-    status.textContent = "Cüzdan tetikleniyor...";
+    status.textContent = "Cüzdan aranıyor...";
     
     try {
       let eth;
-      // 1. SDK Kontrolü (Base App için)
+      // 1. SDK Kontrolü
       if (window.fSDK && window.fSDK.wallet) {
         try { eth = await window.fSDK.wallet.getEthereumProvider(); } catch(e) {}
       }
-      // 2. Tarayıcı Kontrolü (Web için)
+      // 2. Web Kontrolü
       if (!eth) eth = window.ethereum;
 
       if (!eth) {
-        status.textContent = "Cüzdan bulunamadı. Lütfen MetaMask yükleyin.";
+        status.textContent = "HATA: Cüzdan eklentisi (MetaMask vb.) bulunamadı.";
         return;
       }
 
-      // Web'de cüzdanı zorla açar
+      // Cüzdanı bağla
       const accounts = await eth.request({ method: "eth_requestAccounts" });
+      if (!accounts || accounts.length === 0) {
+        status.textContent = "HATA: Cüzdan izni verilmedi.";
+        return;
+      }
+
       account = accounts[0];
       provider = new ethers.providers.Web3Provider(eth);
-      signer = provider.getSigner();
+      
+      // AĞ KONTROLÜ (Base mi?)
+      const { chainId } = await provider.getNetwork();
+      if (chainId !== 8453) {
+        status.textContent = "UYARI: Lütfen cüzdanınızdan BASE ağını seçin.";
+        // Otomatik ağ değiştirme isteği (opsiyonel ama güvenli)
+        try {
+          await eth.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x2105' }], // 8453 hex
+          });
+        } catch (switchError) {
+           status.textContent = "Lütfen cüzdanı manuel olarak BASE ağına getirin.";
+        }
+      }
 
+      signer = provider.getSigner();
       document.getElementById("addrBox").textContent = "Cüzdan: " + account.slice(0,6) + "..." + account.slice(-4);
-      document.getElementById("connectBtn").textContent = "Bağlandı";
+      document.getElementById("connectBtn").textContent = "Bağlandı ✅";
       document.getElementById("sendBtn").disabled = false;
       status.textContent = "Bağlantı başarılı!";
-    } catch (error) {
-      console.error(error);
-      status.textContent = "Bağlantı sağlanamadı. Lütfen cüzdanı kontrol edin.";
+      
+    } catch (err) {
+      console.error(err);
+      if (err.code === 4001) {
+        status.textContent = "HATA: Bağlantı isteği reddedildi.";
+      } else {
+        status.textContent = "HATA: " + (err.message || "Bilinmeyen bir sorun.");
+      }
     }
   }
 
@@ -123,9 +147,8 @@
     try {
       const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, rpc);
-      const m = await contract.message();
-      document.getElementById("currentMsg").textContent = m || "(Boş)";
-    } catch (e) { console.log("Hata:", e); }
+      document.getElementById("currentMsg").textContent = await contract.message() || "(Boş)";
+    } catch (e) { console.log("Yükleme hatası"); }
   }
 
   async function setMsg() {
@@ -138,7 +161,7 @@
       const tx = await contract.setMessage(input);
       status.textContent = "İşlem gönderildi...";
       await tx.wait();
-      status.textContent = "Başarılı! ✅";
+      status.textContent = "Güncellendi! ✅";
       addTx(tx.hash);
       getMsg();
     } catch (e) { 
@@ -151,7 +174,7 @@
     if(history.innerText.includes("yok")) history.innerHTML = "";
     const item = document.createElement("div");
     item.className = "tx-item";
-    item.textContent = "TX: " + hash.slice(0,15) + "...";
+    item.textContent = "TX: " + hash.slice(0,20) + "...";
     history.prepend(item);
   }
 
