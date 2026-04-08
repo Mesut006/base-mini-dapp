@@ -11,16 +11,17 @@
 
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
-    
-    // Uygulama açılır açılmaz Base App'e "hazırım" sinyalini gönderir
+    window.__fcSdk = sdk; // Cüzdan fonksiyonu için globale alıyoruz
+
     const init = async () => {
-      await sdk.actions.ready();
-      console.log("Base App: Ready signal sent!");
+      try {
+        await sdk.actions.ready();
+        console.log("Base App Ready!");
+      } catch (e) {
+        console.error("SDK Ready Error:", e);
+      }
     };
     init();
-    
-    // SDK'yı globale kaydediyoruz
-    window.__fcSdk = sdk;
   </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
@@ -42,134 +43,73 @@
     @media(max-width:768px){.shell{grid-template-columns:minmax(0,1fr);}}
     .card{
       background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:22px;
-      box-shadow:0 22px 45px rgba(0,0,0,.75),0 0 0 1px rgba(15,23,42,.9);
+      box-shadow:0 22px 45px rgba(0,0,0,.75);
       position:relative;overflow:hidden;
     }
-    .card::before{content:"";position:absolute;inset:-40%;background:radial-gradient(circle at top left,rgba(59,130,246,.18) 0,transparent 55%);opacity:.6;pointer-events:none;}
     .card-inner{position:relative;z-index:1;}
     .header-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px;}
     .logo-pill{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;background:rgba(15,23,42,.9);border:1px solid rgba(51,65,85,.8);font-size:11px;color:var(--text-sub);}
-    .logo-circle{width:18px;height:18px;border-radius:999px;background:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.25);}
-    h1{font-size:20px;margin:0;color:#e0f2fe;letter-spacing:.02em;}
-    .subtitle{font-size:12px;color:var(--text-sub);margin-top:4px;}
+    .logo-circle{width:18px;height:18px;border-radius:999px;background:#0ea5e9;}
+    h1{font-size:20px;margin:0;color:#e0f2fe;}
     .badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
     .badge{font-size:10px;border-radius:999px;padding:3px 9px;border:1px solid rgba(51,65,85,.9);color:var(--text-sub);background:rgba(15,23,42,.9);}
     button{
       background:var(--accent);border:none;border-radius:999px;color:#fff;padding:8px 16px;cursor:pointer;
-      font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+      font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;
     }
-    button:disabled{background:#4b5563;cursor:not-allowed;opacity:.8;}
-    .btn-secondary{background:rgba(15,23,42,.9);border:1px solid rgba(51,65,85,.9);color:var(--text-sub);}
+    button:disabled{background:#4b5563;cursor:not-allowed;}
     .section{margin-top:18px;}
-    .label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;}
+    .label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
     .label{font-size:11px;color:var(--text-sub);text-transform:uppercase;letter-spacing:.08em;}
-    .value-box{border-radius:14px;border:1px solid var(--border);padding:10px 12px;background:rgba(15,23,42,.96);font-size:12px;min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
-    .value-main{font-size:12px;color:var(--text-main);opacity:.9;word-break:break-all;}
-    .pill{font-size:10px;border-radius:999px;padding:3px 7px;border:1px solid rgba(55,65,81,.9);color:var(--text-sub);}
-    input{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--border);background:rgba(15,23,42,.96);color:var(--text-main);font-size:13px;outline:none;}
-    input::placeholder{color:#6b7280}
-    .status{font-size:11px;color:var(--text-sub);margin-top:4px;min-height:16px;white-space:pre-line;}
-    .tx-list{margin-top:6px;border-radius:12px;border:1px solid var(--border);background:rgba(15,23,42,.96);padding:8px 10px;max-height:180px;overflow-y:auto;}
+    .value-box{border-radius:14px;border:1px solid var(--border);padding:10px 12px;background:rgba(15,23,42,.96);font-size:12px;min-height:38px;display:flex;align-items:center;justify-content:space-between;}
+    .value-main{font-size:12px;color:var(--text-main);word-break:break-all;}
+    input{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--border);background:rgba(15,23,42,.96);color:var(--text-main);outline:none;}
+    .tx-list{margin-top:6px;border-radius:12px;border:1px solid var(--border);background:rgba(15,23,42,.96);padding:8px 10px;max-height:150px;overflow-y:auto;}
     .tx-empty{font-size:11px;color:var(--text-muted);word-break:break-all;}
-    .network-warning{
-      position:fixed;top:12px;left:50%;transform:translateX(-50%);
-      max-width:960px;width:calc(100% - 32px);border-radius:14px;border:1px solid rgba(248,113,113,.6);
-      background:rgba(127,29,29,.95);color:#fee2e2;padding:8px 12px;font-size:12px;display:flex;gap:8px;align-items:flex-start;
-      box-shadow:0 18px 40px rgba(127,29,29,.7);z-index:50;
-    }
-    .hidden{display:none;}
-    .shimmer{
-      position:relative;overflow:hidden;
-      background:linear-gradient(90deg, rgba(15,23,42,.96) 0%, rgba(30,64,175,.7) 50%, rgba(15,23,42,.96) 100%);
-      background-size:200% 100%;
-      animation: shimmer-move 1.2s ease-in-out infinite;
-    }
-    @keyframes shimmer-move { 0%{background-position:-150% 0} 100%{background-position:150% 0} }
+    
+    /* Social Hub Styles */
     a { color: inherit; text-decoration: none; }
-    .profile-card{
-      display:flex; gap:12px; align-items:center;
-      padding:12px; border:1px solid rgba(51,65,85,.9);
-      border-radius:16px; background:rgba(15,23,42,.95);
-    }
-    .pfp{
-      width:44px;height:44px;border-radius:14px;
-      display:flex;align-items:center;justify-content:center;
-      font-weight:700;color:#0b1120;
-      background:linear-gradient(135deg,#60a5fa,#22d3ee);
-      box-shadow:0 0 0 3px rgba(59,130,246,.18);
-    }
-    .profile-meta{min-width:0}
-    .profile-name{font-size:14px;font-weight:650;color:#e0f2fe;line-height:1.1}
-    .profile-sub{font-size:11px;color:var(--text-sub);margin-top:3px;word-break:break-word}
-    .link-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
-    .link-btn{
-      width:100%; display:flex;align-items:center;justify-content:space-between;
-      gap:10px; padding:10px 12px; border-radius:14px;
-      border:1px solid rgba(51,65,85,.9); background:rgba(15,23,42,.92);
-      color:var(--text-main); font-size:12px;
-    }
-    .link-btn:hover{border-color:rgba(59,130,246,.75)}
-    .link-left{display:flex;align-items:center;gap:10px;min-width:0}
-    .link-ico{
-      width:28px;height:28px;border-radius:10px;
-      display:flex;align-items:center;justify-content:center;
-      background:rgba(59,130,246,.15); border:1px solid rgba(59,130,246,.25);
-    }
-    .link-title{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-    .link-sub{font-size:10px;color:var(--text-sub); margin-top:2px}
+    .profile-card{display:flex; gap:12px; align-items:center; padding:12px; border:1px solid rgba(51,65,85,.9); border-radius:16px; background:rgba(15,23,42,.95); margin-bottom:12px;}
+    .pfp{width:44px;height:44px;border-radius:14px; display:flex;align-items:center;justify-content:center; font-weight:700; background:linear-gradient(135deg,#60a5fa,#22d3ee); color:#0b1120;}
+    .link-grid{display:grid; gap:10px;}
+    .link-btn{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:14px; border:1px solid rgba(51,65,85,.9); background:rgba(15,23,42,.92); font-size:12px;}
+    .link-left{display:flex; align-items:center; gap:10px;}
+    .link-ico{width:28px;height:28px; display:flex; align-items:center; justify-content:center; background:rgba(59,130,246,.15); border-radius:10px;}
+    .link-title{font-weight:600;}
+    .link-sub{font-size:10px; color:var(--text-sub);}
   </style>
 </head>
 
 <body>
-  <div id="networkWarning" class="network-warning hidden">
-    <div>⚠️</div>
-    <div id="networkWarningText">
-      Bu dApp <strong>Base Mainnet (8453)</strong> için tasarlanmıştır.
-    </div>
-  </div>
-
   <div class="shell">
     <div class="card">
       <div class="card-inner">
         <div class="header-row">
           <div>
-            <div class="logo-pill"><div class="logo-circle"></div><span>Base • Onchain Mini dApp</span></div>
+            <div class="logo-pill"><div class="logo-circle"></div><span>Base • Mini dApp</span></div>
             <h1>HelloBase Dashboard</h1>
-            <div class="subtitle">Kontratıyla cüzdanından direkt etkileşime geç.</div>
             <div class="badge-row">
               <div class="badge">0xD6e4…c8F8</div>
-              <div class="badge">Verified on BaseScan</div>
+              <div class="badge">Built by Mesut</div>
             </div>
           </div>
-
-          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
-            <button id="connectButton" type="button"><span class="btn-label">Cüzdanı Bağla</span></button>
-            <div id="walletStatus" style="font-family: ui-monospace, monospace; font-size:11px; color:#9ca3af; min-height:14px;"></div>
-          </div>
+          <button id="connectButton" type="button">Cüzdanı Bağla</button>
         </div>
 
         <div class="section">
-          <div class="label-row"><span class="label">Bağlantı durumu</span><span class="pill">EVM • Base</span></div>
+          <div class="label-row"><span class="label">Bağlantı Durumu</span></div>
           <div class="value-box"><div class="value-main" id="walletInfoText">Bağlı değil</div></div>
         </div>
 
         <div class="section">
-          <div class="label-row">
-            <span class="label">Aktif mesaj (message)</span>
-            <button class="btn-secondary" id="refreshMessageButton" type="button" onclick="window.__forceRefreshMessage()">Yenile</button>
-          </div>
-          <div class="value-box" id="currentMessageBox">
-            <div class="value-main" id="currentMessage">-</div>
-          </div>
+          <div class="label-row"><span class="label">Aktif Mesaj</span><button id="refreshBtn" style="padding:4px 10px; font-size:10px;">Yenile</button></div>
+          <div class="value-box"><div class="value-main" id="currentMessage">-</div></div>
         </div>
 
         <div class="section">
-          <div class="label-row"><span class="label">Yeni mesaj yaz</span></div>
-          <input id="newMessageInput" placeholder="Örn: Merhaba Base ✨" />
-          <div class="label-row" style="margin-top: 10px;">
-            <div class="status" id="txStatus"></div>
-            <button id="setMessageButton" type="button" disabled><span class="btn-label">Mesajı Güncelle</span></button>
-          </div>
+          <input id="newMessageInput" placeholder="Mesajınızı yazın..." />
+          <button id="setMessageButton" style="width:100%; margin-top:10px;" disabled>Mesajı Güncelle</button>
+          <div id="txStatus" style="font-size:11px; margin-top:5px; color:var(--text-sub);"></div>
         </div>
 
         <div class="section">
@@ -181,20 +121,30 @@
 
     <div class="card">
       <div class="card-inner">
-        <div style="font-size:13px;font-weight:500;margin-bottom:10px;">Mesut • Social Hub</div>
+        <div style="font-size:13px; font-weight:500; margin-bottom:10px;">Mesut • Social Hub</div>
         <div class="profile-card">
           <div class="pfp">MÖ</div>
-          <div class="profile-meta">
-            <div class="profile-name">Mesut Öztürk</div>
-            <div class="profile-sub">Base Builder<br/><span style="color:#93c5fd">mesutgoktug.eth</span></div>
+          <div style="min-width:0;">
+            <div style="font-size:14px; font-weight:650;">Mesut Öztürk</div>
+            <div class="link-sub">Base Builder • mesutgoktug.eth</div>
           </div>
         </div>
+
         <div class="link-grid">
           <a class="link-btn" href="https://farcaster.xyz/mesutgoktug.eth" target="_blank">
-            <div class="link-left"><div class="link-ico">🟪</div><div><div class="link-title">Farcaster</div></div></div><div>↗</div>
+            <div class="link-left"><div class="link-ico">🟪</div><div><div class="link-title">Farcaster</div><div class="link-sub">mesutgoktug.eth</div></div></div><div>↗</div>
+          </a>
+          <a class="link-btn" href="https://x.com/soylebisey" target="_blank">
+            <div class="link-left"><div class="link-ico">𝕏</div><div><div class="link-title">X (Twitter)</div><div class="link-sub">@soylebisey</div></div></div><div>↗</div>
+          </a>
+          <a class="link-btn" href="https://talent.app/mesutgoktug.eth" target="_blank">
+            <div class="link-left"><div class="link-ico">🏅</div><div><div class="link-title">Talent</div><div class="link-sub">mesutgoktug.eth</div></div></div><div>↗</div>
+          </a>
+          <a class="link-btn" href="https://paragraph.com/@mesutgoktug" target="_blank">
+            <div class="link-left"><div class="link-ico">✍️</div><div><div class="link-title">Paragraph</div><div class="link-sub">@mesutgoktug</div></div></div><div>↗</div>
           </a>
           <a class="link-btn" href="https://github.com/Mesut006" target="_blank">
-            <div class="link-left"><div class="link-ico">🐙</div><div><div class="link-title">GitHub</div></div></div><div>↗</div>
+            <div class="link-left"><div class="link-ico">🐙</div><div><div class="link-title">GitHub</div><div class="link-sub">Mesut006</div></div></div><div>↗</div>
           </a>
         </div>
       </div>
@@ -204,109 +154,74 @@
   <script>
     (function () {
       const ethers = window.ethers;
-      const EXPECTED_CHAIN_ID = 8453;
       const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
       const CONTRACT_ABI = [
         {"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},
         {"inputs":[{"name":"newMessage","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}
       ];
 
-      const READ_RPC = "https://base-rpc.publicnode.com";
-      const readProvider = new ethers.providers.JsonRpcProvider(READ_RPC);
-      const contractReadBase = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, readProvider);
-      window.__contractReadBase = contractReadBase;
+      const rpcProvider = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
+      const readContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
 
-      const connectButton = document.getElementById("connectButton");
-      const walletStatus = document.getElementById("walletStatus");
-      const walletInfoText = document.getElementById("walletInfoText");
-      const newMessageInput = document.getElementById("newMessageInput");
-      const setMessageButton = document.getElementById("setMessageButton");
-      const txStatus = document.getElementById("txStatus");
-      const networkWarning = document.getElementById("networkWarning");
-      const txList = document.getElementById("txList");
-      const currentMessageEl = document.getElementById("currentMessage");
+      let walletProvider, address;
 
-      let eip1193 = null;
-      let web3Provider = null;
-      let address = null;
-      let lastChainId = null;
-
-      function shortAddr(a){ return a ? (a.slice(0,6)+"…"+a.slice(-4)) : ""; }
-
-      async function getProvider() {
-        // Öncelik Farcaster SDK'da
+      async function getWeb3Provider() {
         const sdk = window.__fcSdk;
         if (sdk && sdk.wallet) {
           try {
-            const p = await sdk.wallet.getEthereumProvider();
-            if (p) return p;
-          } catch (e) { console.error("SDK Provider Error", e); }
+            return await sdk.wallet.getEthereumProvider();
+          } catch (e) { console.error(e); }
         }
         return window.ethereum;
       }
 
-      async function refreshState() {
-        if (!web3Provider) return;
-        const accounts = await web3Provider.listAccounts();
-        address = accounts?.[0] || null;
-        const net = await web3Provider.getNetwork();
-        lastChainId = net.chainId;
-
-        walletInfoText.textContent = address 
-          ? `Bağlı: ${shortAddr(address)} (Chain: ${lastChainId})`
-          : "Bağlı değil";
-        
-        if (lastChainId !== EXPECTED_CHAIN_ID) networkWarning.classList.remove("hidden");
-        else networkWarning.classList.add("hidden");
-
-        setMessageButton.disabled = !(address && lastChainId === EXPECTED_CHAIN_ID && newMessageInput.value.trim());
-      }
-
-      async function connectWallet() {
-        walletStatus.textContent = "Bağlanıyor...";
+      async function connect() {
         try {
-          eip1193 = await getProvider();
-          if (!eip1193) throw new Error("Cüzdan bulunamadı");
+          const eipProvider = await getWeb3Provider();
+          if (!eipProvider) return alert("Cüzdan bulunamadı");
           
-          await eip1193.request({ method: "eth_requestAccounts" });
-          web3Provider = new ethers.providers.Web3Provider(eip1193, "any");
+          const accounts = await eipProvider.request({ method: "eth_requestAccounts" });
+          address = accounts[0];
+          walletProvider = new ethers.providers.Web3Provider(eipProvider);
           
-          walletStatus.textContent = "Bağlı ✅";
-          await refreshState();
+          document.getElementById("walletInfoText").textContent = `Bağlı: ${address.slice(0,6)}...${address.slice(-4)}`;
+          document.getElementById("connectButton").textContent = "Bağlandı";
+          document.getElementById("setMessageButton").disabled = false;
         } catch (e) {
-          walletStatus.textContent = "Hata: " + e.message;
+          console.error(e);
+          document.getElementById("txStatus").textContent = "Bağlantı hatası!";
         }
       }
 
-      async function setMessage() {
-        const text = newMessageInput.value.trim();
-        txStatus.textContent = "Onay bekleniyor...";
+      async function updateMsg() {
+        const msg = await readContract.message();
+        document.getElementById("currentMessage").textContent = msg || "(Boş)";
+      }
+
+      async function sendTx() {
+        const text = document.getElementById("newMessageInput").value;
+        if (!text) return;
+        
+        const status = document.getElementById("txStatus");
+        status.textContent = "Onay bekleniyor...";
+        
         try {
-          const signer = web3Provider.getSigner();
+          const signer = walletProvider.getSigner();
           const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
           const tx = await contract.setMessage(text);
-          
-          txStatus.textContent = "Gönderildi! Onaylanıyor...";
+          status.textContent = "İşlem gönderildi...";
           await tx.wait();
-          txStatus.textContent = "Başarılı! ✅";
-          newMessageInput.value = "";
-          await window.__forceRefreshMessage();
+          status.textContent = "Başarılı! ✅";
+          updateMsg();
         } catch (e) {
-          txStatus.textContent = "Hata: " + e.message;
+          status.textContent = "Hata: " + e.message;
         }
       }
 
-      window.__forceRefreshMessage = async function () {
-        try {
-          const msg = await window.__contractReadBase.message();
-          currentMessageEl.textContent = msg || "(Boş)";
-        } catch (e) { console.error("Refresh error", e); }
-      };
-
-      connectButton.addEventListener("click", connectWallet);
-      setMessageButton.addEventListener("click", setMessage);
-      newMessageInput.addEventListener("input", refreshState);
-      window.__forceRefreshMessage();
+      document.getElementById("connectButton").onclick = connect;
+      document.getElementById("setMessageButton").onclick = sendTx;
+      document.getElementById("refreshBtn").onclick = updateMsg;
+      updateMsg();
     })();
   </script>
 </body>
