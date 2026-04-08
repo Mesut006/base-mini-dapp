@@ -9,7 +9,7 @@
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
     window.fSDK = sdk;
-    sdk.actions.ready().catch(() => console.log("Web Modu"));
+    sdk.actions.ready().catch(() => {});
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
@@ -34,7 +34,7 @@
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div>
-        <h2 style="margin:0; font-size:18px;">HelloBase Dashboard</h2>
+        <h2 style="margin:0; font-size:18px;">HelloBase Panel</h2>
         <span style="font-size:11px; color:var(--sub);">Builder: Mesut Öztürk</span>
       </div>
       <button id="connectBtn">Cüzdan Bağla</button>
@@ -86,18 +86,22 @@
 
   async function connect() {
     const status = document.getElementById("status");
+    status.textContent = "Bağlanıyor...";
     try {
       let eip;
-      // 1. Önce Base App içi SDK kontrolü
-      if (window.fSDK && window.fSDK.wallet && typeof window.fSDK.wallet.getEthereumProvider === 'function') {
-        eip = await window.fSDK.wallet.getEthereumProvider();
+      // 1. Önce Base App / Farcaster SDK kontrolü
+      if (window.fSDK && window.fSDK.wallet) {
+        try { eip = await window.fSDK.wallet.getEthereumProvider(); } catch(e) {}
       } 
       // 2. Yoksa Web Tarayıcı (MetaMask vb.)
       if (!eip && window.ethereum) {
         eip = window.ethereum;
       }
 
-      if (!eip) throw new Error("Cüzdan eklentisi bulunamadı!");
+      if (!eip) {
+        status.textContent = "Cüzdan bulunamadı. Lütfen bir Web3 cüzdanı kurun.";
+        return;
+      }
 
       const accounts = await eip.request({ method: "eth_requestAccounts" });
       account = accounts[0];
@@ -107,10 +111,10 @@
       document.getElementById("addrBox").textContent = "Cüzdan: " + account.slice(0,6) + "..." + account.slice(-4);
       document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
-      status.textContent = "Bağlantı başarılı!";
+      status.textContent = "Başarıyla bağlandı!";
     } catch (e) {
-      status.textContent = "Hata: " + e.message;
-      console.error(e);
+      status.textContent = "Bağlantı iptal edildi veya bir hata oluştu.";
+      console.log("Connect Error:", e);
     }
   }
 
@@ -118,8 +122,9 @@
     try {
       const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, rpc);
-      document.getElementById("currentMsg").textContent = await contract.message() || "(Boş)";
-    } catch (e) { document.getElementById("currentMsg").textContent = "Yüklenemedi"; }
+      const m = await contract.message();
+      document.getElementById("currentMsg").textContent = m || "(Boş)";
+    } catch (e) { console.log("Read Error:", e); }
   }
 
   async function setMsg() {
@@ -130,20 +135,23 @@
       status.textContent = "Cüzdan onayı bekleniyor...";
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
       const tx = await contract.setMessage(input);
-      status.textContent = "Gönderiliyor...";
+      status.textContent = "İşlem ağa gönderildi...";
       await tx.wait();
       status.textContent = "Güncellendi! ✅";
       addTx(tx.hash);
       getMsg();
-    } catch (e) { status.textContent = "İşlem hatası."; }
+    } catch (e) { 
+      status.textContent = "İşlem gerçekleştirilemedi."; 
+      console.log("Send Error:", e);
+    }
   }
 
   function addTx(hash) {
     const history = document.getElementById("history");
-    if(history.innerHTML.includes("yok")) history.innerHTML = "";
+    if(history.innerText.includes("yok")) history.innerHTML = "";
     const item = document.createElement("div");
     item.className = "tx-item";
-    item.textContent = "TX: " + hash.slice(0,20) + "...";
+    item.textContent = "TX: " + hash.slice(0,18) + "...";
     history.prepend(item);
   }
 
