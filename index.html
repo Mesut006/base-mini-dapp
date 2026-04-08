@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
-  <title>Mesut - HelloBase Panel</title>
+  <title>Mesut Dashboard</title>
 
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
     window.fSDK = sdk;
-    sdk.actions.ready().catch(() => console.log("Web modunda çalışıyor."));
+    sdk.actions.ready().catch(() => console.log("Web Modu"));
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
@@ -26,7 +26,6 @@
     .tx-item{font-size:11px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--sub);word-break:break-all;}
     a{text-decoration:none;color:inherit;}
     .link-btn{display:flex;justify-content:space-between;padding:12px;background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:14px;font-size:13px;margin-bottom:8px;}
-    .link-btn:hover{background:var(--accent);}
   </style>
 </head>
 <body>
@@ -81,31 +80,28 @@
 
 <script>
   const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
-  const ABI = [
-    {"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"name":"_msg","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}
-  ];
+  const ABI = [{"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"_msg","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
   let provider, signer, account;
 
   async function connect() {
     const status = document.getElementById("status");
     try {
-      // Hem SDK (Base App) hem de Web (MetaMask vb) destekleyen mantık
-      let eipProvider;
-      if (window.fSDK && window.fSDK.wallet) {
-        // Base App içi
-        eipProvider = await window.fSDK.wallet.getEthereumProvider();
-      } else if (window.ethereum) {
-        // Normal Web Tarayıcı
-        eipProvider = window.ethereum;
-      } else {
-        return alert("Cüzdan bulunamadı! Lütfen MetaMask veya Base App kullanın.");
+      let eip;
+      // 1. Önce Base App içi SDK kontrolü
+      if (window.fSDK && window.fSDK.wallet && typeof window.fSDK.wallet.getEthereumProvider === 'function') {
+        eip = await window.fSDK.wallet.getEthereumProvider();
+      } 
+      // 2. Yoksa Web Tarayıcı (MetaMask vb.)
+      if (!eip && window.ethereum) {
+        eip = window.ethereum;
       }
 
-      const accounts = await eipProvider.request({ method: "eth_requestAccounts" });
+      if (!eip) throw new Error("Cüzdan eklentisi bulunamadı!");
+
+      const accounts = await eip.request({ method: "eth_requestAccounts" });
       account = accounts[0];
-      provider = new ethers.providers.Web3Provider(eipProvider);
+      provider = new ethers.providers.Web3Provider(eip);
       signer = provider.getSigner();
 
       document.getElementById("addrBox").textContent = "Cüzdan: " + account.slice(0,6) + "..." + account.slice(-4);
@@ -114,6 +110,7 @@
       status.textContent = "Bağlantı başarılı!";
     } catch (e) {
       status.textContent = "Hata: " + e.message;
+      console.error(e);
     }
   }
 
@@ -121,25 +118,24 @@
     try {
       const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, rpc);
-      const m = await contract.message();
-      document.getElementById("currentMsg").textContent = m || "(Boş)";
-    } catch (e) { document.getElementById("currentMsg").textContent = "Hata!"; }
+      document.getElementById("currentMsg").textContent = await contract.message() || "(Boş)";
+    } catch (e) { document.getElementById("currentMsg").textContent = "Yüklenemedi"; }
   }
 
   async function setMsg() {
     const input = document.getElementById("msgInput").value;
     const status = document.getElementById("status");
-    if(!input) return;
+    if(!input || !signer) return;
     try {
-      status.textContent = "Onay bekleniyor...";
+      status.textContent = "Cüzdan onayı bekleniyor...";
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
       const tx = await contract.setMessage(input);
-      status.textContent = "İşlem gönderildi...";
+      status.textContent = "Gönderiliyor...";
       await tx.wait();
-      status.textContent = "Başarılı! ✅";
+      status.textContent = "Güncellendi! ✅";
       addTx(tx.hash);
       getMsg();
-    } catch (e) { status.textContent = "İşlem reddedildi."; }
+    } catch (e) { status.textContent = "İşlem hatası."; }
   }
 
   function addTx(hash) {
@@ -149,7 +145,6 @@
     item.className = "tx-item";
     item.textContent = "TX: " + hash.slice(0,20) + "...";
     history.prepend(item);
-    if(history.children.length > 5) history.removeChild(history.lastChild);
   }
 
   document.getElementById("connectBtn").onclick = connect;
@@ -157,6 +152,5 @@
   document.getElementById("refreshBtn").onclick = getMsg;
   getMsg();
 </script>
-
 </body>
 </html>
