@@ -10,12 +10,7 @@
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
     window.fSDK = sdk;
-    // SDK hazır olduğunda başlat
-    setTimeout(() => {
-        if(window.fSDK && window.fSDK.actions) {
-            window.fSDK.actions.ready().catch(() => {});
-        }
-    }, 500);
+    sdk.actions.ready().catch(() => {});
   </script>
 
   <style>
@@ -28,9 +23,10 @@
     button:disabled{opacity:0.4;}
     .box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:16px;padding:12px;margin-top:10px;font-size:13px;}
     input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#000;color:#fff;margin:10px 0;outline:none;}
-    .tx-item{font-size:11px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--sub);word-break:break-all;}
+    .tx-item{font-size:11px;padding:8px 0;border-bottom:1px solid var(--border);color:var(--sub);word-break:break-all;}
     a{text-decoration:none;color:inherit;}
-    .link-btn{display:flex;justify-content:space-between;padding:12px;background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:14px;font-size:13px;margin-bottom:8px;}
+    .link-btn{display:flex;justify-content:space-between;padding:12px;background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:14px;font-size:13px;margin-bottom:8px;transition:0.2s;}
+    .link-btn:hover{border-color:var(--accent);background:rgba(59,130,246,0.1);}
   </style>
 </head>
 <body>
@@ -48,29 +44,33 @@
     <div id="addrBox" class="box">Durum: Bağlı Değil</div>
 
     <div class="box">
-      <div style="display:flex; justify-content:space-between;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
         <span style="font-size:10px; color:var(--sub);">ZİNCİRDEKİ MESAJ</span>
         <button id="refreshBtn" style="padding:2px 8px; font-size:10px; background:#1e293b;">Yenile</button>
       </div>
-      <div id="currentMsg" style="margin-top:8px; font-weight:600;">Yükleniyor...</div>
+      <div id="currentMsg" style="margin-top:8px; font-weight:600; color:var(--accent);">Yükleniyor...</div>
     </div>
 
     <input type="text" id="msgInput" placeholder="Yeni mesaj...">
-    <button id="sendBtn" style="width:100%;" disabled>Güncelle</button>
+    <button id="sendBtn" style="width:100%;" disabled>Mesajı Güncelle</button>
     <div id="status" style="font-size:11px; margin-top:10px; text-align:center; color:var(--sub);"></div>
 
     <div style="margin-top:20px;">
-      <span style="font-size:10px; color:var(--sub);">İŞLEM GEÇMİŞİ</span>
-      <div id="history" class="box" style="padding:10px;">Kayıt yok.</div>
+      <span style="font-size:10px; color:var(--sub);">İŞLEM GEÇMİŞİ (SON 5)</span>
+      <div id="history" class="box" style="padding:10px;">Henüz işlem yok.</div>
     </div>
   </div>
 
   <div class="card">
     <h3 style="margin-top:0; font-size:16px;">Sosyal Bağlantılar</h3>
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; background:rgba(255,255,255,0.05); padding:10px; border-radius:15px;">
       <div style="width:40px; height:40px; background:var(--accent); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:bold;">MÖ</div>
-      <div><div style="font-size:14px; font-weight:600;">Mesut Öztürk</div><div style="font-size:11px; color:var(--sub);">mesutgoktug.eth</div></div>
+      <div>
+        <div style="font-size:14px; font-weight:600;">Mesut Öztürk</div>
+        <div style="font-size:11px; color:var(--sub);">mesutgoktug.eth</div>
+      </div>
     </div>
+    
     <a href="https://farcaster.xyz/mesutgoktug.eth" target="_blank" class="link-btn"><span>🟪 Farcaster</span><span>↗</span></a>
     <a href="https://x.com/soylebisey" target="_blank" class="link-btn"><span>𝕏 Twitter</span><span>↗</span></a>
     <a href="https://talent.app/mesutgoktug.eth" target="_blank" class="link-btn"><span>🏅 Talent</span><span>↗</span></a>
@@ -87,72 +87,66 @@
 
   async function connect() {
     const st = document.getElementById("status");
-    st.textContent = "Bağlanıyor...";
+    st.textContent = "Cüzdan tetikleniyor...";
     
     try {
-      let eth = null;
-
-      // Hatalı "undefined" okumalarını engellemek için güvenli kontrol
-      const isSDKAvailable = window.fSDK && window.fSDK.wallet;
-      
-      if (isSDKAvailable) {
-          try {
-              eth = await window.fSDK.wallet.getEthereumProvider();
-          } catch(e) { console.log("SDK Cüzdanı alınamadı."); }
-      }
-      
-      // Eğer SDK cüzdanı yoksa (Web ortamı), window.ethereum'u kullan
-      if (!eth) eth = window.ethereum;
+      // Önce varsa bekleyen istekleri temizlemek için basit bir kontrol
+      const eth = (window.fSDK && window.fSDK.wallet) ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
 
       if (!eth) {
-          st.textContent = "Cüzdan bulunamadı (MetaMask yükleyin).";
-          return;
+        st.textContent = "Cüzdan bulunamadı!";
+        return;
       }
 
-      const accs = await eth.request({ method: 'eth_requestAccounts' });
-      user = accs[0];
+      // Cüzdanı zorla aç
+      const accounts = await eth.request({ method: 'eth_requestAccounts' });
+      user = accounts[0];
       prov = new ethers.providers.Web3Provider(eth);
       sign = prov.getSigner();
 
-      document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "...";
-      document.getElementById("connectBtn").textContent = "Bağlandı";
+      // Bağlantı başarılı bilgileri
+      document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "..." + user.slice(-4);
+      document.getElementById("connectBtn").textContent = "Bağlandı ✅";
       document.getElementById("sendBtn").disabled = false;
       st.textContent = "Bağlantı başarılı!";
     } catch (e) {
-      st.textContent = "Bağlantı reddedildi.";
+      console.error(e);
+      st.textContent = "Hata: Cüzdan onayını kontrol edin.";
     }
   }
 
   async function load() {
     try {
-      const r = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
-      const c = new ethers.Contract(ADDR, ABI, r);
-      document.getElementById("currentMsg").textContent = await c.message();
-    } catch (e) {}
+      const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
+      const ctr = new ethers.Contract(ADDR, ABI, rpc);
+      const m = await ctr.message();
+      document.getElementById("currentMsg").textContent = m || "(Boş)";
+    } catch (e) { document.getElementById("currentMsg").textContent = "Yüklenemedi"; }
   }
 
   async function send() {
-    const v = document.getElementById("msgInput").value;
+    const val = document.getElementById("msgInput").value;
     const st = document.getElementById("status");
-    if(!v || !sign) return;
+    if(!val || !sign) return;
     try {
-      st.textContent = "Cüzdan onayı bekleniyor...";
-      const c = new ethers.Contract(ADDR, ABI, sign);
-      const tx = await c.setMessage(v);
+      st.textContent = "Onay bekleniyor...";
+      const ctr = new ethers.Contract(ADDR, ABI, sign);
+      const tx = await ctr.setMessage(val);
+      st.textContent = "İşlem gönderildi...";
       await tx.wait();
       st.textContent = "Güncellendi! ✅";
       addTx(tx.hash);
       load();
-    } catch (e) { st.textContent = "İşlem hatası."; }
+    } catch (e) { st.textContent = "İşlem yapılamadı."; }
   }
 
   function addTx(hash) {
     const h = document.getElementById("history");
-    if(h.innerText.includes("Kayıt yok")) h.innerHTML = "";
-    const d = document.createElement("div");
-    d.className = "tx-item";
-    d.innerHTML = `TX: ${hash.slice(0,15)}... <a href="https://basescan.org/tx/${hash}" target="_blank" style="color:var(--accent); float:right;">İncele</a>`;
-    h.prepend(d);
+    if(h.innerText.includes("yok")) h.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = "tx-item";
+    div.innerHTML = `TX: ${hash.slice(0,18)}... <a href="https://basescan.org/tx/${hash}" target="_blank" style="color:var(--accent); float:right;">Detay</a>`;
+    h.prepend(div);
   }
 
   document.getElementById("connectBtn").onclick = connect;
