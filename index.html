@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
-  <title>Mesut Dashboard</title>
+  <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Uygulamayı Aç","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
+  <title>Mesut Öztürk - Dashboard</title>
 
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
@@ -15,17 +15,20 @@
 
   <style>
     :root{--bg:#020617;--card:#0f172a;--border:#1e293b;--accent:#3b82f6;--text:#f8fafc;--sub:#94a3b8;}
-    body{font-family:system-ui,sans-serif;background:radial-gradient(circle at top,#1e3a8a 0,#020617 50%,#000 100%);color:var(--text);margin:0;padding:15px;min-height:100dvh;display:flex;justify-content:center;align-items:center;}
+    body{font-family:system-ui,-apple-system,sans-serif;background:radial-gradient(circle at top,#1e3a8a 0,#020617 50%,#000 100%);color:var(--text);margin:0;padding:15px;min-height:100dvh;display:flex;justify-content:center;align-items:center;}
     .shell{width:100%;max-width:920px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;}
     @media(max-width:768px){.shell{grid-template-columns:1fr;}}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.5);}
-    button{background:var(--accent);border:none;border-radius:12px;color:#fff;padding:10px 16px;cursor:pointer;font-weight:600;font-size:13px;}
-    button:disabled{opacity:0.5;cursor:not-allowed;}
-    .box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:16px;padding:12px;margin-top:10px;font-size:13px;}
-    input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#000;color:#fff;margin:10px 0;outline:none;}
-    .tx-item{font-size:11px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--sub);word-break:break-all;}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.5); backdrop-filter: blur(10px);}
+    button{background:var(--accent);border:none;border-radius:12px;color:#fff;padding:12px 16px;cursor:pointer;font-weight:600;font-size:13px;transition: 0.2s;}
+    button:active{transform: scale(0.98);}
+    button:disabled{opacity:0.4;cursor:not-allowed;}
+    .box{background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:16px;padding:12px;margin-top:10px;font-size:13px;}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#000;color:#fff;margin:10px 0;outline:none; box-sizing: border-box;}
+    .tx-item{font-size:11px;padding:8px 0;border-bottom:1px solid var(--border);color:var(--sub);word-break:break-all;}
+    .tx-item:last-child{border:none;}
     a{text-decoration:none;color:inherit;}
-    .link-btn{display:flex;justify-content:space-between;padding:12px;background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:14px;font-size:13px;margin-bottom:8px;}
+    .link-btn{display:flex;justify-content:space-between;padding:12px;background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:14px;font-size:13px;margin-bottom:8px;transition: 0.2s;}
+    .link-btn:hover{background:rgba(59,130,246,0.2); border-color: var(--accent);}
   </style>
 </head>
 <body>
@@ -40,30 +43,32 @@
       <button id="connectBtn">Cüzdan Bağla</button>
     </div>
 
-    <div id="addrBox" class="box">Durum: Bağlı Değil</div>
+    <div id="addrBox" class="box">Durum: Cüzdan Bağlı Değil</div>
 
     <div class="box">
-      <div style="display:flex; justify-content:space-between;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
         <span style="font-size:10px; color:var(--sub);">ZİNCİRDEKİ MESAJ</span>
-        <button id="refreshBtn" style="padding:2px 8px; font-size:10px; background:#1e293b;">Yenile</button>
+        <button id="refreshBtn" style="padding:4px 10px; font-size:10px; background:#1e293b;">Yenile</button>
       </div>
-      <div id="currentMsg" style="margin-top:8px; font-weight:600;">Yükleniyor...</div>
+      <div id="currentMsg" style="margin-top:8px; font-weight:600; font-size:15px; color:var(--accent);">Yükleniyor...</div>
     </div>
 
-    <input type="text" id="msgInput" placeholder="Yeni mesaj...">
-    <button id="sendBtn" style="width:100%;" disabled>Mesajı Güncelle</button>
-    <div id="status" style="font-size:11px; margin-top:10px; text-align:center; color:var(--sub);"></div>
+    <div class="section" style="margin-top:20px;">
+      <input type="text" id="msgInput" placeholder="Yeni mesajınızı buraya yazın...">
+      <button id="sendBtn" style="width:100%;" disabled>Mesajı Güncelle (On-Chain)</button>
+      <div id="status" style="font-size:11px; margin-top:12px; text-align:center; color:var(--sub); min-height: 15px;"></div>
+    </div>
 
-    <div style="margin-top:20px;">
+    <div style="margin-top:25px;">
       <span style="font-size:10px; color:var(--sub);">İŞLEM GEÇMİŞİ (SON 5)</span>
-      <div id="history" class="box" style="padding:10px;">Henüz işlem yok.</div>
+      <div id="history" class="box" style="padding:10px; max-height: 150px; overflow-y: auto;">İşlem kaydı yok.</div>
     </div>
   </div>
 
   <div class="card">
     <h3 style="margin-top:0; font-size:16px;">Sosyal Bağlantılar</h3>
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; background:rgba(255,255,255,0.05); padding:10px; border-radius:15px;">
-      <div style="width:40px; height:40px; background:var(--accent); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:bold;">MÖ</div>
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; background:rgba(255,255,255,0.03); padding:12px; border-radius:18px; border:1px solid var(--border);">
+      <div style="width:40px; height:40px; background:linear-gradient(135deg,#3b82f6,#06b6d4); border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:bold; color:white;">MÖ</div>
       <div>
         <div style="font-size:14px; font-weight:600;">Mesut Öztürk</div>
         <div style="font-size:11px; color:var(--sub);">mesutgoktug.eth</div>
@@ -82,69 +87,97 @@
   const ADDR = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
   const ABI = [{"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"_msg","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
-  let prov, sign, user;
+  let provider, signer, userAddress;
 
-  async function connect() {
-    const st = document.getElementById("status");
-    st.textContent = "Bağlanıyor...";
+  // Cüzdan Bağlama Fonksiyonu
+  async function connectWallet() {
+    const statusEl = document.getElementById("status");
+    statusEl.textContent = "Cüzdan aranıyor...";
+    
     try {
-      let eth = (window.fSDK && window.fSDK.wallet) ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
-      
+      let eth;
+      // 1. Farcaster/Base App SDK
+      if (window.fSDK && window.fSDK.wallet) {
+        eth = await window.fSDK.wallet.getEthereumProvider();
+      }
+      // 2. Browser Extension (MetaMask vb.)
+      if (!eth) eth = window.ethereum;
+
       if (!eth) {
-        st.textContent = "Cüzdan bulunamadı.";
+        statusEl.textContent = "Hata: Cüzdan eklentisi bulunamadı.";
         return;
       }
 
-      const accs = await eth.request({ method: "eth_requestAccounts" });
-      user = accs[0];
-      prov = new ethers.providers.Web3Provider(eth);
-      sign = prov.getSigner();
+      const accounts = await eth.request({ method: "eth_requestAccounts" });
+      userAddress = accounts[0];
+      provider = new ethers.providers.Web3Provider(eth);
+      signer = provider.getSigner();
 
-      document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6)+"...";
+      document.getElementById("addrBox").textContent = "Cüzdan: " + userAddress.slice(0,6) + "..." + userAddress.slice(-4);
       document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
-      st.textContent = "Başarılı!";
-    } catch (e) {
-      st.textContent = "Hata oluştu.";
+      statusEl.textContent = "Bağlantı başarılı!";
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Bağlantı başarısız: " + (err.message.includes("User rejected") ? "İzin reddedildi" : "Hata oluştu");
     }
   }
 
-  async function load() {
+  // Mesajı Kontrattan Oku
+  async function loadMessage() {
     try {
       const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
-      const ctr = new ethers.Contract(ADDR, ABI, rpc);
-      document.getElementById("currentMsg").textContent = await ctr.message();
-    } catch (e) {}
+      const contract = new ethers.Contract(ADDR, ABI, rpc);
+      const msg = await contract.message();
+      document.getElementById("currentMsg").textContent = msg || "(Mesaj Boş)";
+    } catch (e) {
+      document.getElementById("currentMsg").textContent = "Yüklenemedi";
+    }
   }
 
-  async function send() {
-    const val = document.getElementById("msgInput").value;
-    const st = document.getElementById("status");
-    if(!val || !sign) return;
+  // Mesajı Güncelle
+  async function updateMessage() {
+    const inputVal = document.getElementById("msgInput").value;
+    const statusEl = document.getElementById("status");
+    if (!inputVal || !signer) return;
+
     try {
-      st.textContent = "Onay bekleniyor...";
-      const ctr = new ethers.Contract(ADDR, ABI, sign);
-      const tx = await ctr.setMessage(val);
-      await tx.wait();
-      st.textContent = "Güncellendi! ✅";
-      addTx(tx.hash);
-      load();
-    } catch (e) { st.textContent = "Hata!"; }
+      statusEl.textContent = "Cüzdan onayı bekleniyor...";
+      const contract = new ethers.Contract(ADDR, ABI, signer);
+      const tx = await contract.setMessage(inputVal);
+      statusEl.textContent = "İşlem ağa gönderildi...";
+      const receipt = await tx.wait();
+      statusEl.textContent = "Başarıyla güncellendi! ✅";
+      addTxToHistory(tx.hash);
+      loadMessage();
+      document.getElementById("msgInput").value = "";
+    } catch (err) {
+      statusEl.textContent = "İşlem hatası: Onay verilmedi veya bakiye yetersiz.";
+    }
   }
 
-  function addTx(hash) {
-    const h = document.getElementById("history");
-    if(h.innerText.includes("yok")) h.innerHTML = "";
+  // İşlem Geçmişini Güncelle
+  function addTxToHistory(hash) {
+    const historyEl = document.getElementById("history");
+    if (historyEl.innerText.includes("kaydı yok")) historyEl.innerHTML = "";
     const div = document.createElement("div");
     div.className = "tx-item";
-    div.textContent = "TX: " + hash.slice(0,15) + "...";
-    h.prepend(div);
+    div.innerHTML = `<span>TX: ${hash.slice(0,20)}...</span> <a href="https://basescan.org/tx/${hash}" target="_blank" style="color:var(--accent); float:right;">Görüntüle</a>`;
+    historyEl.prepend(div);
+    
+    // Sadece son 5 işlemi göster
+    while (historyEl.children.length > 5) {
+      historyEl.removeChild(historyEl.lastChild);
+    }
   }
 
-  document.getElementById("connectBtn").onclick = connect;
-  document.getElementById("sendBtn").onclick = send;
-  document.getElementById("refreshBtn").onclick = load;
-  load();
+  document.getElementById("connectBtn").onclick = connectWallet;
+  document.getElementById("sendBtn").onclick = updateMessage;
+  document.getElementById("refreshBtn").onclick = loadMessage;
+
+  // Başlangıçta mesajı yükle
+  loadMessage();
 </script>
+
 </body>
 </html>
