@@ -3,15 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Uygulamayı Aç","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
+  <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
   <title>Mesut Dashboard</title>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
     window.fSDK = sdk;
-    sdk.actions.ready().catch(() => {});
+    // SDK hazır olduğunda başlat
+    setTimeout(() => {
+        if(window.fSDK && window.fSDK.actions) {
+            window.fSDK.actions.ready().catch(() => {});
+        }
+    }, 500);
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
   <style>
     :root{--bg:#020617;--card:#0f172a;--border:#1e293b;--accent:#3b82f6;--text:#f8fafc;--sub:#94a3b8;}
@@ -19,7 +24,7 @@
     .shell{width:100%;max-width:920px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;}
     @media(max-width:768px){.shell{grid-template-columns:1fr;}}
     .card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.5);}
-    button{background:var(--accent);border:none;border-radius:12px;color:#fff;padding:12px 16px;cursor:pointer;font-weight:600;font-size:13px;}
+    button{background:var(--accent);border:none;border-radius:12px;color:#fff;padding:10px 16px;cursor:pointer;font-weight:600;font-size:13px;}
     button:disabled{opacity:0.4;}
     .box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:16px;padding:12px;margin-top:10px;font-size:13px;}
     input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#000;color:#fff;margin:10px 0;outline:none;}
@@ -85,43 +90,36 @@
     st.textContent = "Bağlanıyor...";
     
     try {
-      // 1. Adım: Cüzdan Sağlayıcısını Bul
-      let eth;
-      if (window.fSDK && window.fSDK.wallet) {
-          eth = await window.fSDK.wallet.getEthereumProvider();
-      } else {
-          eth = window.ethereum;
-      }
+      let eth = null;
 
-      if (!eth) throw new Error("Cüzdan eklentisi bulunamadı!");
-
-      // 2. Adım: Hesapları İste
-      const accounts = await eth.request({ method: 'eth_requestAccounts' });
-      user = accounts[0];
-
-      // 3. Adım: Ethers'ı Hazırla
-      prov = new ethers.providers.Web3Provider(eth, "any");
+      // Hatalı "undefined" okumalarını engellemek için güvenli kontrol
+      const isSDKAvailable = window.fSDK && window.fSDK.wallet;
       
-      // 4. Adım: Ağ Kontrolü
-      const net = await prov.getNetwork();
-      if (net.chainId !== 8453) {
-          st.textContent = "Lütfen cüzdanınızdan Base ağına geçin.";
+      if (isSDKAvailable) {
           try {
-              await eth.request({
-                  method: 'wallet_switchEthereumChain',
-                  params: [{ chainId: '0x2105' }],
-              });
-          } catch (e) { console.log("Ağ değişimi gerek."); }
+              eth = await window.fSDK.wallet.getEthereumProvider();
+          } catch(e) { console.log("SDK Cüzdanı alınamadı."); }
+      }
+      
+      // Eğer SDK cüzdanı yoksa (Web ortamı), window.ethereum'u kullan
+      if (!eth) eth = window.ethereum;
+
+      if (!eth) {
+          st.textContent = "Cüzdan bulunamadı (MetaMask yükleyin).";
+          return;
       }
 
+      const accs = await eth.request({ method: 'eth_requestAccounts' });
+      user = accs[0];
+      prov = new ethers.providers.Web3Provider(eth);
       sign = prov.getSigner();
+
       document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "...";
-      document.getElementById("connectBtn").textContent = "Bağlı";
+      document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
       st.textContent = "Bağlantı başarılı!";
     } catch (e) {
-      console.error(e);
-      st.textContent = "Bağlantı hatası: " + e.message.slice(0,30);
+      st.textContent = "Bağlantı reddedildi.";
     }
   }
 
@@ -145,7 +143,7 @@
       st.textContent = "Güncellendi! ✅";
       addTx(tx.hash);
       load();
-    } catch (e) { st.textContent = "İşlem reddedildi."; }
+    } catch (e) { st.textContent = "İşlem hatası."; }
   }
 
   function addTx(hash) {
@@ -153,7 +151,7 @@
     if(h.innerText.includes("Kayıt yok")) h.innerHTML = "";
     const d = document.createElement("div");
     d.className = "tx-item";
-    d.textContent = "TX: " + hash.slice(0,15) + "...";
+    d.innerHTML = `TX: ${hash.slice(0,15)}... <a href="https://basescan.org/tx/${hash}" target="_blank" style="color:var(--accent); float:right;">İncele</a>`;
     h.prepend(d);
   }
 
