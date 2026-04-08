@@ -3,18 +3,13 @@
 <head>
   <head>
   <script type="module">
-    import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
-    
-    // SDK'yı en başta hazır hale getiriyoruz
-    const init = async () => {
-      try {
-        await sdk.actions.ready(); // Sinyali hemen gönderiyoruz
-        console.log("Base App: Ready signal sent early!");
-      } catch (e) {
-        console.error("SDK hatası:", e);
-      }
-    };
-    init();
+   import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
+
+const init = async () => {
+  // Base App'in uygulamayı tanıması için bu çağrı şarttır
+  await sdk.actions.ready(); 
+};
+init();
     window.__fcSdk = sdk; // Diğer scriptlerin kullanabilmesi için globale ekliyoruz
   </script>
 </head>
