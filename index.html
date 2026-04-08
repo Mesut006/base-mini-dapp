@@ -3,162 +3,160 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase Dashboard","url":"https://base-mini-dapp.vercel.app/","splashImageUrl":"https://base-mini-dapp.vercel.app/icon.png","splashBackgroundColor":"#020617"}}}' />
-  <link rel="manifest" href="/manifest.json" />
-  <title>Mesut - HelloBase Mini dApp</title>
+  <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
+  <title>Mesut - HelloBase Panel</title>
 
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
-    window.fSDK = sdk; 
-    sdk.actions.ready();
+    window.fSDK = sdk;
+    sdk.actions.ready().catch(() => console.log("Web modunda çalışıyor."));
   </script>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
   <style>
-    :root{--bg:#020617;--card:#020617;--border:#1e293b;--accent:#3b82f6;--text:#e5e7eb;--sub:#9ca3af;}
-    body{font-family:sans-serif;background:radial-gradient(circle at top,#1d4ed8 0,#020617 40%,#000 100%);color:var(--text);margin:0;padding:15px;min-height:100dvh;display:flex;justify-content:center;align-items:center;}
-    .shell{width:100%;max-width:960px;display:grid;grid-template-columns:3fr 2fr;gap:20px;}
+    :root{--bg:#020617;--card:#0f172a;--border:#1e293b;--accent:#3b82f6;--text:#f8fafc;--sub:#94a3b8;}
+    body{font-family:system-ui,sans-serif;background:radial-gradient(circle at top,#1e3a8a 0,#020617 50%,#000 100%);color:var(--text);margin:0;padding:15px;min-height:100dvh;display:flex;justify-content:center;align-items:center;}
+    .shell{width:100%;max-width:920px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;}
     @media(max-width:768px){.shell{grid-template-columns:1fr;}}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;box-shadow:0 20px 40px rgba(0,0,0,0.5);}
-    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
-    h1{font-size:18px;margin:0;}
-    .badge{font-size:10px;background:rgba(15,23,42,0.9);padding:3px 8px;border-radius:10px;border:1px solid var(--border);color:var(--sub);}
-    button{background:var(--accent);border:none;border-radius:20px;color:#fff;padding:8px 15px;cursor:pointer;font-weight:600;font-size:12px;}
-    button:disabled{background:#4b5563;}
-    .section{margin-top:15px;}
-    .label{font-size:10px;color:var(--sub);text-transform:uppercase;display:block;margin-bottom:5px;}
-    .box{background:rgba(15,23,42,0.9);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:12px;}
-    input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#000;color:#fff;margin-bottom:10px;}
-    .tx-item{font-size:10px;padding:5px 0;border-bottom:1px solid #1e293b;color:var(--sub);word-break:break-all;}
-    
-    /* Social Hub */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.5);}
+    button{background:var(--accent);border:none;border-radius:12px;color:#fff;padding:10px 16px;cursor:pointer;font-weight:600;font-size:13px;}
+    button:disabled{opacity:0.5;cursor:not-allowed;}
+    .box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:16px;padding:12px;margin-top:10px;font-size:13px;}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#000;color:#fff;margin:10px 0;outline:none;}
+    .tx-item{font-size:11px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--sub);word-break:break-all;}
     a{text-decoration:none;color:inherit;}
-    .profile{display:flex;gap:10px;align-items:center;margin-bottom:15px;}
-    .pfp{width:35px;height:35px;background:linear-gradient(135deg,#3b82f6,#06b6d4);border-radius:10px;display:flex;justify-content:center;align-items:center;font-weight:700;}
-    .link-btn{display:flex;justify-content:space-between;padding:10px;background:rgba(15,23,42,0.9);border:1px solid var(--border);border-radius:12px;font-size:12px;margin-bottom:8px;}
+    .link-btn{display:flex;justify-content:space-between;padding:12px;background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:14px;font-size:13px;margin-bottom:8px;}
+    .link-btn:hover{background:var(--accent);}
   </style>
 </head>
-
 <body>
-  <div class="shell">
-    <div class="card">
-      <div class="header">
-        <div>
-          <h1>HelloBase Dashboard</h1>
-          <div style="display:flex; gap:5px; margin-top:5px;">
-            <span class="badge">0xD6e4…c8F8</span>
-            <span class="badge">Builder: Mesut</span>
-          </div>
-        </div>
-        <button id="connectBtn">Cüzdanı Bağla</button>
-      </div>
 
-      <div class="section">
-        <span class="label">Bağlantı</span>
-        <div class="box" id="addr">Bağlı değil</div>
+<div class="shell">
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div>
+        <h2 style="margin:0; font-size:18px;">HelloBase Dashboard</h2>
+        <span style="font-size:11px; color:var(--sub);">Builder: Mesut Öztürk</span>
       </div>
-
-      <div class="section">
-        <span class="label">Mesaj (Zincir Üstü)</span>
-        <div class="box" style="display:flex; justify-content:space-between;">
-          <span id="msg">...</span>
-          <button id="reBtn" style="padding:2px 8px; font-size:9px;">Yenile</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <input id="input" placeholder="Yeni mesaj..." />
-        <button id="setBtn" style="width:100%" disabled>Güncelle</button>
-        <div id="stat" style="font-size:10px; color:var(--sub); margin-top:8px; text-align:center;"></div>
-      </div>
-
-      <div class="section">
-        <span class="label">Son İşlemler (Geçmiş)</span>
-        <div class="box" id="history">İşlem henüz yok.</div>
-      </div>
+      <button id="connectBtn">Cüzdan Bağla</button>
     </div>
 
-    <div class="card">
-      <div style="font-size:12px; font-weight:700; margin-bottom:10px;">Sosyal Hub</div>
-      <div class="profile">
-        <div class="pfp">MÖ</div>
-        <div><div style="font-size:13px; font-weight:700;">Mesut Öztürk</div><div style="font-size:10px; color:var(--sub);">mesutgoktug.eth</div></div>
+    <div id="addrBox" class="box">Durum: Bağlı Değil</div>
+
+    <div class="box">
+      <div style="display:flex; justify-content:space-between;">
+        <span style="font-size:10px; color:var(--sub);">ZİNCİRDEKİ MESAJ</span>
+        <button id="refreshBtn" style="padding:2px 8px; font-size:10px; background:#1e293b;">Yenile</button>
       </div>
-      <a href="https://farcaster.xyz/mesutgoktug.eth" target="_blank" class="link-btn"><span>🟪 Farcaster</span><span>↗</span></a>
-      <a href="https://x.com/soylebisey" target="_blank" class="link-btn"><span>𝕏 Twitter</span><span>↗</span></a>
-      <a href="https://talent.app/mesutgoktug.eth" target="_blank" class="link-btn"><span>🏅 Talent</span><span>↗</span></a>
-      <a href="https://paragraph.com/@mesutgoktug" target="_blank" class="link-btn"><span>✍️ Paragraph</span><span>↗</span></a>
-      <a href="https://github.com/Mesut006" target="_blank" class="link-btn"><span>🐙 GitHub</span><span>↗</span></a>
+      <div id="currentMsg" style="margin-top:8px; font-weight:600;">Yükleniyor...</div>
+    </div>
+
+    <input type="text" id="msgInput" placeholder="Mesajınızı yazın...">
+    <button id="sendBtn" style="width:100%;" disabled>Mesajı Güncelle</button>
+    <div id="status" style="font-size:11px; margin-top:10px; text-align:center; color:var(--sub);"></div>
+
+    <div style="margin-top:20px;">
+      <span style="font-size:10px; color:var(--sub);">İŞLEM GEÇMİŞİ (SON 5)</span>
+      <div id="history" class="box" style="padding:10px;">Henüz işlem yok.</div>
     </div>
   </div>
 
-  <script>
-    const ADDR = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
-    const ABI = [
-      {"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},
-      {"inputs":[{"name":"_msg","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}
-    ];
+  <div class="card">
+    <h3 style="margin-top:0; font-size:16px;">Sosyal Bağlantılar</h3>
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; background:rgba(255,255,255,0.05); padding:10px; border-radius:15px;">
+      <div style="width:40px; height:40px; background:var(--accent); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:bold;">MÖ</div>
+      <div>
+        <div style="font-size:14px; font-weight:600;">Mesut Öztürk</div>
+        <div style="font-size:11px; color:var(--sub);">mesutgoktug.eth</div>
+      </div>
+    </div>
+    
+    <a href="https://farcaster.xyz/mesutgoktug.eth" target="_blank" class="link-btn"><span>🟪 Farcaster</span><span>↗</span></a>
+    <a href="https://x.com/soylebisey" target="_blank" class="link-btn"><span>𝕏 Twitter</span><span>↗</span></a>
+    <a href="https://talent.app/mesutgoktug.eth" target="_blank" class="link-btn"><span>🏅 Talent</span><span>↗</span></a>
+    <a href="https://paragraph.com/@mesutgoktug" target="_blank" class="link-btn"><span>✍️ Paragraph</span><span>↗</span></a>
+    <a href="https://github.com/Mesut006" target="_blank" class="link-btn"><span>🐙 GitHub</span><span>↗</span></a>
+  </div>
+</div>
 
-    let prov, sign, user;
+<script>
+  const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
+  const ABI = [
+    {"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"name":"_msg","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}
+  ];
 
-    async function connect() {
-      const st = document.getElementById("stat");
-      try {
-        let eip = (window.fSDK && window.fSDK.wallet) ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
-        if (!eip) return alert("Cüzdan bulunamadı");
-        
-        const accounts = await eip.request({ method: "eth_requestAccounts" });
-        user = accounts[0];
-        prov = new ethers.providers.Web3Provider(eip);
-        sign = prov.getSigner();
+  let provider, signer, account;
 
-        document.getElementById("addr").textContent = user.slice(0,6)+"..."+user.slice(-4);
-        document.getElementById("connectBtn").textContent = "Bağlandı";
-        document.getElementById("setBtn").disabled = false;
-        st.textContent = "Bağlantı kuruldu!";
-      } catch (e) { st.textContent = "Hata oluştu."; }
+  async function connect() {
+    const status = document.getElementById("status");
+    try {
+      // Hem SDK (Base App) hem de Web (MetaMask vb) destekleyen mantık
+      let eipProvider;
+      if (window.fSDK && window.fSDK.wallet) {
+        // Base App içi
+        eipProvider = await window.fSDK.wallet.getEthereumProvider();
+      } else if (window.ethereum) {
+        // Normal Web Tarayıcı
+        eipProvider = window.ethereum;
+      } else {
+        return alert("Cüzdan bulunamadı! Lütfen MetaMask veya Base App kullanın.");
+      }
+
+      const accounts = await eipProvider.request({ method: "eth_requestAccounts" });
+      account = accounts[0];
+      provider = new ethers.providers.Web3Provider(eipProvider);
+      signer = provider.getSigner();
+
+      document.getElementById("addrBox").textContent = "Cüzdan: " + account.slice(0,6) + "..." + account.slice(-4);
+      document.getElementById("connectBtn").textContent = "Bağlandı";
+      document.getElementById("sendBtn").disabled = false;
+      status.textContent = "Bağlantı başarılı!";
+    } catch (e) {
+      status.textContent = "Hata: " + e.message;
     }
+  }
 
-    async function load() {
-      try {
-        const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
-        const ctr = new ethers.Contract(ADDR, ABI, rpc);
-        document.getElementById("msg").textContent = await ctr.message() || "(Boş)";
-      } catch (e) {}
-    }
+  async function getMsg() {
+    try {
+      const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, rpc);
+      const m = await contract.message();
+      document.getElementById("currentMsg").textContent = m || "(Boş)";
+    } catch (e) { document.getElementById("currentMsg").textContent = "Hata!"; }
+  }
 
-    async function send() {
-      const txt = document.getElementById("input").value;
-      const st = document.getElementById("stat");
-      if(!txt) return;
-      try {
-        st.textContent = "Cüzdan onayı bekleniyor...";
-        const ctr = new ethers.Contract(ADDR, ABI, sign);
-        const tx = await ctr.setMessage(txt);
-        st.textContent = "Gönderildi...";
-        const receipt = await tx.wait();
-        st.textContent = "Başarılı!";
-        addHistory(tx.hash);
-        load();
-      } catch (e) { st.textContent = "İşlem iptal edildi."; }
-    }
+  async function setMsg() {
+    const input = document.getElementById("msgInput").value;
+    const status = document.getElementById("status");
+    if(!input) return;
+    try {
+      status.textContent = "Onay bekleniyor...";
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      const tx = await contract.setMessage(input);
+      status.textContent = "İşlem gönderildi...";
+      await tx.wait();
+      status.textContent = "Başarılı! ✅";
+      addTx(tx.hash);
+      getMsg();
+    } catch (e) { status.textContent = "İşlem reddedildi."; }
+  }
 
-    function addHistory(hash) {
-      const h = document.getElementById("history");
-      if(h.innerHTML.includes("İşlem henüz yok")) h.innerHTML = "";
-      const div = document.createElement("div");
-      div.className = "tx-item";
-      div.textContent = hash;
-      h.prepend(div);
-      // Sadece son 5 işlemi tut
-      while(h.children.length > 5) h.removeChild(h.lastChild);
-    }
+  function addTx(hash) {
+    const history = document.getElementById("history");
+    if(history.innerHTML.includes("yok")) history.innerHTML = "";
+    const item = document.createElement("div");
+    item.className = "tx-item";
+    item.textContent = "TX: " + hash.slice(0,20) + "...";
+    history.prepend(item);
+    if(history.children.length > 5) history.removeChild(history.lastChild);
+  }
 
-    document.getElementById("connectBtn").onclick = connect;
-    document.getElementById("setBtn").onclick = send;
-    document.getElementById("reBtn").onclick = load;
-    load();
-  </script>
+  document.getElementById("connectBtn").onclick = connect;
+  document.getElementById("sendBtn").onclick = setMsg;
+  document.getElementById("refreshBtn").onclick = getMsg;
+  getMsg();
+</script>
+
 </body>
 </html>
