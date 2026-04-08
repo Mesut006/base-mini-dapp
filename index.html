@@ -52,7 +52,7 @@
 
     <input type="text" id="msgInput" placeholder="Yeni mesaj...">
     <button id="sendBtn" style="width:100%;" disabled>Mesajı Güncelle</button>
-    <div id="status" style="font-size:11px; margin-top:10px; text-align:center; color:var(--sub); background:rgba(255,255,255,0.05); padding:5px; border-radius:8px;"></div>
+    <div id="status" style="font-size:11px; margin-top:10px; text-align:center; color:var(--sub);"></div>
 
     <div style="margin-top:20px;">
       <span style="font-size:10px; color:var(--sub);">İŞLEM GEÇMİŞİ (SON 5)</span>
@@ -79,109 +79,72 @@
 </div>
 
 <script>
-  const CONTRACT_ADDRESS = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
+  const ADDR = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
   const ABI = [{"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"_msg","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
-  let provider, signer, account;
+  let prov, sign, user;
 
   async function connect() {
-    const status = document.getElementById("status");
-    status.textContent = "Cüzdan aranıyor...";
-    
+    const st = document.getElementById("status");
+    st.textContent = "Bağlanıyor...";
     try {
-      let eth;
-      // 1. SDK Kontrolü
-      if (window.fSDK && window.fSDK.wallet) {
-        try { eth = await window.fSDK.wallet.getEthereumProvider(); } catch(e) {}
-      }
-      // 2. Web Kontrolü
-      if (!eth) eth = window.ethereum;
-
+      let eth = (window.fSDK && window.fSDK.wallet) ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
+      
       if (!eth) {
-        status.textContent = "HATA: Cüzdan eklentisi (MetaMask vb.) bulunamadı.";
+        st.textContent = "Cüzdan bulunamadı.";
         return;
       }
 
-      // Cüzdanı bağla
-      const accounts = await eth.request({ method: "eth_requestAccounts" });
-      if (!accounts || accounts.length === 0) {
-        status.textContent = "HATA: Cüzdan izni verilmedi.";
-        return;
-      }
+      const accs = await eth.request({ method: "eth_requestAccounts" });
+      user = accs[0];
+      prov = new ethers.providers.Web3Provider(eth);
+      sign = prov.getSigner();
 
-      account = accounts[0];
-      provider = new ethers.providers.Web3Provider(eth);
-      
-      // AĞ KONTROLÜ (Base mi?)
-      const { chainId } = await provider.getNetwork();
-      if (chainId !== 8453) {
-        status.textContent = "UYARI: Lütfen cüzdanınızdan BASE ağını seçin.";
-        // Otomatik ağ değiştirme isteği (opsiyonel ama güvenli)
-        try {
-          await eth.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x2105' }], // 8453 hex
-          });
-        } catch (switchError) {
-           status.textContent = "Lütfen cüzdanı manuel olarak BASE ağına getirin.";
-        }
-      }
-
-      signer = provider.getSigner();
-      document.getElementById("addrBox").textContent = "Cüzdan: " + account.slice(0,6) + "..." + account.slice(-4);
-      document.getElementById("connectBtn").textContent = "Bağlandı ✅";
+      document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6)+"...";
+      document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
-      status.textContent = "Bağlantı başarılı!";
-      
-    } catch (err) {
-      console.error(err);
-      if (err.code === 4001) {
-        status.textContent = "HATA: Bağlantı isteği reddedildi.";
-      } else {
-        status.textContent = "HATA: " + (err.message || "Bilinmeyen bir sorun.");
-      }
+      st.textContent = "Başarılı!";
+    } catch (e) {
+      st.textContent = "Hata oluştu.";
     }
   }
 
-  async function getMsg() {
+  async function load() {
     try {
       const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, rpc);
-      document.getElementById("currentMsg").textContent = await contract.message() || "(Boş)";
-    } catch (e) { console.log("Yükleme hatası"); }
+      const ctr = new ethers.Contract(ADDR, ABI, rpc);
+      document.getElementById("currentMsg").textContent = await ctr.message();
+    } catch (e) {}
   }
 
-  async function setMsg() {
-    const input = document.getElementById("msgInput").value;
-    const status = document.getElementById("status");
-    if(!input || !signer) return;
+  async function send() {
+    const val = document.getElementById("msgInput").value;
+    const st = document.getElementById("status");
+    if(!val || !sign) return;
     try {
-      status.textContent = "Onay bekleniyor...";
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const tx = await contract.setMessage(input);
-      status.textContent = "İşlem gönderildi...";
+      st.textContent = "Onay bekleniyor...";
+      const ctr = new ethers.Contract(ADDR, ABI, sign);
+      const tx = await ctr.setMessage(val);
       await tx.wait();
-      status.textContent = "Güncellendi! ✅";
+      st.textContent = "Güncellendi! ✅";
       addTx(tx.hash);
-      getMsg();
-    } catch (e) { 
-      status.textContent = "İşlem başarısız.";
-    }
+      load();
+    } catch (e) { st.textContent = "Hata!"; }
   }
 
   function addTx(hash) {
-    const history = document.getElementById("history");
-    if(history.innerText.includes("yok")) history.innerHTML = "";
-    const item = document.createElement("div");
-    item.className = "tx-item";
-    item.textContent = "TX: " + hash.slice(0,20) + "...";
-    history.prepend(item);
+    const h = document.getElementById("history");
+    if(h.innerText.includes("yok")) h.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = "tx-item";
+    div.textContent = "TX: " + hash.slice(0,15) + "...";
+    h.prepend(div);
   }
 
   document.getElementById("connectBtn").onclick = connect;
-  document.getElementById("sendBtn").onclick = setMsg;
-  document.getElementById("refreshBtn").onclick = getMsg;
-  getMsg();
+  document.getElementById("sendBtn").onclick = send;
+  document.getElementById("refreshBtn").onclick = load;
+  load();
 </script>
 </body>
 </html>
