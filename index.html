@@ -84,37 +84,38 @@
 
   let provider, signer, account;
 
+  // Bağlantı fonksiyonu tamamen güncellendi
   async function connect() {
     const status = document.getElementById("status");
-    status.textContent = "Bağlanıyor...";
+    status.textContent = "Cüzdan tetikleniyor...";
+    
     try {
-      let eip;
-      // 1. Önce Base App / Farcaster SDK kontrolü
+      let eth;
+      // 1. SDK Kontrolü (Base App için)
       if (window.fSDK && window.fSDK.wallet) {
-        try { eip = await window.fSDK.wallet.getEthereumProvider(); } catch(e) {}
-      } 
-      // 2. Yoksa Web Tarayıcı (MetaMask vb.)
-      if (!eip && window.ethereum) {
-        eip = window.ethereum;
+        try { eth = await window.fSDK.wallet.getEthereumProvider(); } catch(e) {}
       }
+      // 2. Tarayıcı Kontrolü (Web için)
+      if (!eth) eth = window.ethereum;
 
-      if (!eip) {
-        status.textContent = "Cüzdan bulunamadı. Lütfen bir Web3 cüzdanı kurun.";
+      if (!eth) {
+        status.textContent = "Cüzdan bulunamadı. Lütfen MetaMask yükleyin.";
         return;
       }
 
-      const accounts = await eip.request({ method: "eth_requestAccounts" });
+      // Web'de cüzdanı zorla açar
+      const accounts = await eth.request({ method: "eth_requestAccounts" });
       account = accounts[0];
-      provider = new ethers.providers.Web3Provider(eip);
+      provider = new ethers.providers.Web3Provider(eth);
       signer = provider.getSigner();
 
       document.getElementById("addrBox").textContent = "Cüzdan: " + account.slice(0,6) + "..." + account.slice(-4);
       document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
-      status.textContent = "Başarıyla bağlandı!";
-    } catch (e) {
-      status.textContent = "Bağlantı iptal edildi veya bir hata oluştu.";
-      console.log("Connect Error:", e);
+      status.textContent = "Bağlantı başarılı!";
+    } catch (error) {
+      console.error(error);
+      status.textContent = "Bağlantı sağlanamadı. Lütfen cüzdanı kontrol edin.";
     }
   }
 
@@ -124,7 +125,7 @@
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, rpc);
       const m = await contract.message();
       document.getElementById("currentMsg").textContent = m || "(Boş)";
-    } catch (e) { console.log("Read Error:", e); }
+    } catch (e) { console.log("Hata:", e); }
   }
 
   async function setMsg() {
@@ -132,17 +133,16 @@
     const status = document.getElementById("status");
     if(!input || !signer) return;
     try {
-      status.textContent = "Cüzdan onayı bekleniyor...";
+      status.textContent = "Onay bekleniyor...";
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
       const tx = await contract.setMessage(input);
-      status.textContent = "İşlem ağa gönderildi...";
+      status.textContent = "İşlem gönderildi...";
       await tx.wait();
-      status.textContent = "Güncellendi! ✅";
+      status.textContent = "Başarılı! ✅";
       addTx(tx.hash);
       getMsg();
     } catch (e) { 
-      status.textContent = "İşlem gerçekleştirilemedi."; 
-      console.log("Send Error:", e);
+      status.textContent = "İşlem başarısız.";
     }
   }
 
@@ -151,7 +151,7 @@
     if(history.innerText.includes("yok")) history.innerHTML = "";
     const item = document.createElement("div");
     item.className = "tx-item";
-    item.textContent = "TX: " + hash.slice(0,18) + "...";
+    item.textContent = "TX: " + hash.slice(0,15) + "...";
     history.prepend(item);
   }
 
