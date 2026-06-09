@@ -6,10 +6,12 @@
   <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
   <title>Mesut Dashboard</title>
 
+  <!-- Ethers.js ve Frame SDK yüklemeleri -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
     window.fSDK = sdk;
+    // Base/Farcaster App içinde framework'ü hazırla
     sdk.actions.ready().catch(() => {});
   </script>
 
@@ -19,10 +21,11 @@
     .shell{width:100%;max-width:920px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;}
     @media(max-width:768px){.shell{grid-template-columns:1fr;}}
     .card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.5);}
-    button{background:var(--accent);border:none;border-radius:12px;color:#fff;padding:12px 16px;cursor:pointer;font-weight:600;font-size:13px;}
-    button:disabled{opacity:0.4;}
+    button{background:var(--accent);border:none;border-radius:12px;color:#fff;padding:12px 16px;cursor:pointer;font-weight:600;font-size:13px;transition: 0.2s;}
+    button:active{transform: scale(0.97);}
+    button:disabled{opacity:0.4;cursor:not-allowed;}
     .box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:16px;padding:12px;margin-top:10px;font-size:13px;}
-    input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#000;color:#fff;margin:10px 0;outline:none;}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#000;color:#fff;margin:10px 0;outline:none;box-sizing: border-box;}
     .tx-item{font-size:11px;padding:8px 0;border-bottom:1px solid var(--border);color:var(--sub);word-break:break-all;}
     a{text-decoration:none;color:inherit;}
     .link-btn{display:flex;justify-content:space-between;padding:12px;background:rgba(30,41,59,0.5);border:1px solid var(--border);border-radius:14px;font-size:13px;margin-bottom:8px;}
@@ -31,6 +34,7 @@
 <body>
 
 <div class="shell">
+  <!-- DASHBOARD PANEL -->
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div>
@@ -47,7 +51,7 @@
         <span style="font-size:10px; color:var(--sub);">ZİNCİRDEKİ MESAJ</span>
         <button id="refreshBtn" style="padding:2px 8px; font-size:10px; background:#1e293b;">Yenile</button>
       </div>
-      <div id="currentMsg" style="margin-top:8px; font-weight:600;">Yükleniyor...</div>
+      <div id="currentMsg" style="margin-top:8px; font-weight:600; color:var(--accent);">Yükleniyor...</div>
     </div>
 
     <input type="text" id="msgInput" placeholder="Yeni mesaj...">
@@ -60,6 +64,7 @@
     </div>
   </div>
 
+  <!-- SOSYAL KART -->
   <div class="card">
     <h3 style="margin-top:0; font-size:16px;">Sosyal Bağlantılar</h3>
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
@@ -82,38 +87,46 @@
 
   async function connect() {
     const st = document.getElementById("status");
-    st.textContent = "Cüzdan uyarılıyor...";
+    st.textContent = "Bağlantı aranıyor...";
+    
     try {
-      // 1. Cüzdanı bul
-      const eth = (window.fSDK && window.fSDK.wallet) ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
+      let eth = null;
+
+      // 1. ADIM: Base App / Warpcast İçi Tarayıcı Kontrolü (Öncelikli)
+      if (window.fSDK && window.fSDK.wallet) {
+        try {
+          eth = await window.fSDK.wallet.getEthereumProvider();
+          st.textContent = "Uygulama cüzdanı algılandı...";
+        } catch(e) { console.log("SDK provider hatası:", e); }
+      }
       
+      // 2. ADIM: Masaüstü / Harici Tarayıcı Kontrolü (Fallback)
       if (!eth) {
-        st.textContent = "Cüzdan bulunamadı!";
+        eth = window.ethereum;
+        st.textContent = "Tarayıcı cüzdanı algılandı...";
+      }
+
+      if (!eth) {
+        st.textContent = "Hata: Geçerli bir Web3 cüzdanı bulunamadı.";
         return;
       }
 
-      // 2. EN ÖNEMLİ KISIM: Eski bağlantıları temizle ve zorla bağlan
-      await eth.request({ method: 'eth_requestAccounts' });
+      // 3. ADIM: Mobil için en kararlı request metodu
+      const accs = await eth.request({ method: 'eth_requestAccounts' });
+      user = accs[0];
       
       prov = new ethers.providers.Web3Provider(eth, "any");
-      
-      // 3. Ağ Base mi?
-      const { chainId } = await prov.getNetwork();
-      if(chainId !== 8453) {
-          st.textContent = "Ağ Base değil! Lütfen cüzdandan Base'i seçin.";
-          await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x2105' }] });
-      }
-
-      const accs = await prov.listAccounts();
-      user = accs[0];
       sign = prov.getSigner();
 
-      document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "...";
+      // UI Güncelleme
+      document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "..." + user.slice(-4);
       document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
-      st.textContent = "Bağlantı başarılı!";
+      st.textContent = "Bağlantı başarılı! ✅";
+
     } catch (e) {
-      st.textContent = "Hata: Cüzdan penceresini manuel açın.";
+      console.error(e);
+      st.textContent = "Bağlantı sağlanamadı: " + (e.message ? e.message.slice(0, 25) : "Reddedildi");
     }
   }
 
@@ -122,7 +135,9 @@
       const r = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
       const c = new ethers.Contract(ADDR, ABI, r);
       document.getElementById("currentMsg").textContent = await c.message();
-    } catch (e) {}
+    } catch (e) {
+      document.getElementById("currentMsg").textContent = "Yüklenemedi";
+    }
   }
 
   async function send() {
@@ -130,14 +145,18 @@
     const st = document.getElementById("status");
     if(!v || !sign) return;
     try {
-      st.textContent = "Onay bekleniyor...";
+      st.textContent = "İşlem onayı bekleniyor...";
       const c = new ethers.Contract(ADDR, ABI, sign);
       const tx = await c.setMessage(v);
+      st.textContent = "Ağa gönderildi...";
       await tx.wait();
       st.textContent = "Güncellendi! ✅";
       addTx(tx.hash);
       load();
-    } catch (e) { st.textContent = "İşlem reddedildi."; }
+      document.getElementById("msgInput").value = "";
+    } catch (e) { 
+      st.textContent = "İşlem iptal edildi."; 
+    }
   }
 
   function addTx(hash) {
@@ -145,7 +164,7 @@
     if(h.innerText.includes("Kayıt yok")) h.innerHTML = "";
     const d = document.createElement("div");
     d.className = "tx-item";
-    d.textContent = "TX: " + hash.slice(0,18) + "...";
+    d.innerHTML = `TX: ${hash.slice(0,15)}... <a href="https://basescan.org/tx/${hash}" target="_blank" style="color:var(--accent); float:right;">Detay ↗</a>`;
     h.prepend(d);
   }
 
