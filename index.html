@@ -6,12 +6,10 @@
   <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
   <title>Mesut Dashboard</title>
 
-  <!-- Ethers.js ve Frame SDK yüklemeleri -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
     window.fSDK = sdk;
-    // Base/Farcaster App içinde framework'ü hazırla
     sdk.actions.ready().catch(() => {});
   </script>
 
@@ -34,7 +32,6 @@
 <body>
 
 <div class="shell">
-  <!-- DASHBOARD PANEL -->
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div>
@@ -64,7 +61,6 @@
     </div>
   </div>
 
-  <!-- SOSYAL KART -->
   <div class="card">
     <h3 style="margin-top:0; font-size:16px;">Sosyal Bağlantılar</h3>
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
@@ -83,50 +79,33 @@
   const ADDR = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
   const ABI = [{"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"_msg","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
-  let prov, sign, user;
+  let rawEthProvider, user;
 
   async function connect() {
     const st = document.getElementById("status");
     st.textContent = "Bağlantı aranıyor...";
     
     try {
-      let eth = null;
-
-      // 1. ADIM: Base App / Warpcast İçi Tarayıcı Kontrolü (Öncelikli)
-      if (window.fSDK && window.fSDK.wallet) {
-        try {
-          eth = await window.fSDK.wallet.getEthereumProvider();
-          st.textContent = "Uygulama cüzdanı algılandı...";
-        } catch(e) { console.log("SDK provider hatası:", e); }
-      }
+      // Farcaster veya standart tarayıcı cüzdanını al
+      rawEthProvider = (window.fSDK && window.fSDK.wallet) ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
       
-      // 2. ADIM: Masaüstü / Harici Tarayıcı Kontrolü (Fallback)
-      if (!eth) {
-        eth = window.ethereum;
-        st.textContent = "Tarayıcı cüzdanı algılandı...";
-      }
-
-      if (!eth) {
-        st.textContent = "Hata: Geçerli bir Web3 cüzdanı bulunamadı.";
+      if (!rawEthProvider) {
+        st.textContent = "Hata: Cüzdan bulunamadı.";
         return;
       }
 
-      // 3. ADIM: Mobil için en kararlı request metodu
-      const accs = await eth.request({ method: 'eth_requestAccounts' });
+      const accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
       user = accs[0];
-      
-      prov = new ethers.providers.Web3Provider(eth, "any");
-      sign = prov.getSigner();
 
       // UI Güncelleme
       document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "..." + user.slice(-4);
       document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
       st.textContent = "Bağlantı başarılı! ✅";
-
+      
     } catch (e) {
       console.error(e);
-      st.textContent = "Bağlantı sağlanamadı: " + (e.message ? e.message.slice(0, 25) : "Reddedildi");
+      st.textContent = "Bağlantı reddedildi.";
     }
   }
 
@@ -143,19 +122,39 @@
   async function send() {
     const v = document.getElementById("msgInput").value;
     const st = document.getElementById("status");
-    if(!v || !sign) return;
+    if(!v || !rawEthProvider || !user) return;
+    
     try {
-      st.textContent = "İşlem onayı bekleniyor...";
-      const c = new ethers.Contract(ADDR, ABI, sign);
-      const tx = await c.setMessage(v);
-      st.textContent = "Ağa gönderildi...";
-      await tx.wait();
+      st.textContent = "Farcaster cüzdan onayı bekleniyor...";
+      
+      // Ethers interfacesini kullanarak calldata (encodeFunctionData) üretiyoruz
+      const iface = new ethers.utils.Interface(ABI);
+      const txData = iface.encodeFunctionData("setMessage", [v]);
+      
+      // Farcaster içi tarayıcıda iptal almamak için ham RPC çağrısı yapıyoruz
+      const txHash = await rawEthProvider.request({
+        method: "eth_sendTransaction",
+        params: [{
+          from: user,
+          to: ADDR,
+          data: txData,
+          chainId: "0x2105" // Base Mainnet (8453) ondalık tabanda karşılığı
+        }]
+      });
+
+      st.textContent = "İşlem gönderildi, onaylanıyor...";
+      
+      // İşlemin blokta onaylanmasını beklemek için geçici bir RPC sağlayıcısı kullanıyoruz
+      const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
+      await rpc.waitForTransaction(txHash);
+
       st.textContent = "Güncellendi! ✅";
-      addTx(tx.hash);
+      addTx(txHash);
       load();
       document.getElementById("msgInput").value = "";
     } catch (e) { 
-      st.textContent = "İşlem iptal edildi."; 
+      console.error(e);
+      st.textContent = "İşlem hatası veya iptal."; 
     }
   }
 
