@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Farcaster Frame v2 Meta Etiketleri -->
   <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
-  <title>Mesut Dashboard</title>
+  <title>HelloBase Dashboard</title>
 
-  <!-- Ethers.js Kütüphanesi -->
+  <!-- Ethers.js ve Alternatif Bağlantı İçin Coinbase SDK -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <script src="https://unpkg.com/@coinbase/wallet-sdk@3.7.2/dist/index.js"></script>
   
-  <!-- Farcaster SDK Entegrasyonu -->
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
     window.fSDK = sdk;
@@ -36,7 +35,6 @@
 <body>
 
 <div class="shell">
-  <!-- Sol Panel: Akıllı Kontrat Etkileşimi -->
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div>
@@ -66,7 +64,6 @@
     </div>
   </div>
 
-  <!-- Sağ Panel: Sosyal Linkler -->
   <div class="card">
     <h3 style="margin-top:0; font-size:16px;">Sosyal Bağlantılar</h3>
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
@@ -82,52 +79,52 @@
 </div>
 
 <script>
-  // Base Kontrat Bilgileri
   const ADDR = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
   const ABI = [{"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"_msg","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
   let rawEthProvider, user;
 
-  // Cüzdan Bağlantı Fonksiyonu
   async function connect() {
     const st = document.getElementById("status");
     st.textContent = "Bağlantı kuruluyor...";
     
     try {
-      // Farcaster SDK aktif mi kontrol et, aktifse onun sağlayıcısını al, yoksa standart window.ethereum'a dön
-      const isFarcaster = !!(window.fSDK && window.fSDK.wallet);
-      rawEthProvider = isFarcaster ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
+      if (window.fSDK && window.fSDK.wallet) {
+        rawEthProvider = await window.fSDK.wallet.getEthereumProvider();
+      } else if (window.ethereum) {
+        rawEthProvider = window.ethereum;
+      } else {
+        const cbWallet = new CoinbaseWalletSDK({
+          appName: "HelloBase",
+          appLogoUrl: "https://base-mini-dapp.vercel.app/og.png",
+          darkMode: true
+        });
+        rawEthProvider = cbWallet.makeWeb3Provider("https://base-rpc.publicnode.com", 8453);
+      }
       
       if (!rawEthProvider) {
-        st.innerHTML = "<span style='color:#f59e0b;'>Cüzdan bulunamadı!</span><br>Lütfen eklentinizi aktif edin veya Farcaster içi tarayıcıyı kullanın.";
+        st.textContent = "Bağlantı sağlayıcısı bulunamadı.";
         return;
       }
 
-      // Hesapları en doğrudan RPC metoduyla talep et
       const accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
-      
       if (!accs || accs.length === 0) {
-        st.textContent = "Bağlantı cüzdan tarafından reddedildi.";
+        st.textContent = "Bağlantı reddedildi.";
         return;
       }
       
       user = accs[0];
-
-      // Arayüzü Güncelle
       document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "..." + user.slice(-4);
       document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
       st.textContent = "Bağlantı başarılı! ✅";
       
     } catch (e) {
-      console.error("Detaylı Cüzdan Hatası:", e);
-      
-      // Masaüstü eklenti çökmesi/kilitlenmesi durumunda kullanıcıyı koruyan fallback mesajı
-      st.innerHTML = "<span style='color:#ef4444;'>Eklenti Yanıt Vermiyor</span><br>Tarayıcı cüzdanınız kilitlenmiş. Çözmek için:<br>1. Tarayıcıyı kapatıp tamamen yeniden açın.<br>2. Veya sayfayı bir kez <b>Gizli Sekmede</b> test edin.";
+      console.error(e);
+      st.textContent = "Bağlantı hatası oluştu.";
     }
   }
 
-  // Zincirden Mevcut Mesajı Okuma (Public RPC kullanarak cüzdandan bağımsız çalışır)
   async function load() {
     try {
       const r = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
@@ -138,7 +135,6 @@
     }
   }
 
-  // Zincire Yeni Mesaj Gönderme (Ham RPC işlemi - Farcaster Gaz Hatasını Çözen Yöntem)
   async function send() {
     const v = document.getElementById("msgInput").value;
     const st = document.getElementById("status");
@@ -158,21 +154,22 @@
         }]
       });
 
-      st.textContent = "İşlem ağa gönderildi, onaylanıyor...";
-      const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
-      await rpc.waitForTransaction(txHash);
-
-      st.textContent = "Güncellendi! ✅";
+      // UI takılmasını önlemek için doğrudan onay mesajı verip listeye ekliyoruz
+      st.textContent = "İşlem ağa başarıyla iletildi! ✅";
       addTx(txHash);
-      load();
-      document.getElementById("msgInput").value = "";
+      
+      // Base ağının hızı için 3.5 saniye sonra arayüzü sessizce yeniliyoruz
+      setTimeout(() => {
+        load();
+        document.getElementById("msgInput").value = "";
+      }, 3500);
+
     } catch (e) { 
       console.error(e);
-      st.textContent = "İşlem iptal edildi veya reddedildi."; 
+      st.textContent = "İşlem iptal edildi veya bir hata oluştu."; 
     }
   }
 
-  // Arayüze İşlem Geçmişi Ekleme
   function addTx(hash) {
     const h = document.getElementById("history");
     if(h.innerText.includes("Kayıt yok")) h.innerHTML = "";
@@ -182,12 +179,9 @@
     h.prepend(d);
   }
 
-  // Buton Olay Dinleyicileri
   document.getElementById("connectBtn").onclick = connect;
   document.getElementById("sendBtn").onclick = send;
   document.getElementById("refreshBtn").onclick = load;
-  
-  // Sayfa açıldığında kontrat verisini otomatik çek
   load();
 </script>
 </body>
