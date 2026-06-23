@@ -41,7 +41,7 @@
       <button id="connectBtn">Cüzdan Bağla</button>
     </div>
 
-    <div id="addrBox" class="box">Durum: Connected Değil</div>
+    <div id="addrBox" class="box">Durum: Bağlı Değil</div>
 
     <div class="box">
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -83,30 +83,19 @@
 
   async function connect() {
     const st = document.getElementById("status");
-    st.textContent = "Bağlantı kuruluyor...";
+    st.textContent = "Bağlantı isteniyor...";
     
     try {
-      // 1. Sağlayıcı ayrımı (Farcaster mı yoksa standart Web3 eklentisi mi?)
-      const isFarcaster = !!(window.fSDK && window.fSDK.wallet);
-      rawEthProvider = isFarcaster ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
+      // 1. Sağlayıcı belirleme
+      rawEthProvider = (window.fSDK && window.fSDK.wallet) ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
       
       if (!rawEthProvider) {
         st.textContent = "Hata: Cüzdan bulunamadı.";
         return;
       }
 
-      let accs;
-      if (isFarcaster) {
-        // Mobil Farcaster için doğrudan ham istek
-        accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
-      } else {
-        // Masaüstü web (MetaMask vb.) için öncelikle izin kontrolü ve ardından tetikleme
-        try {
-          await rawEthProvider.request({ method: 'wallet_requestPermissions', params: [{ eth_accounts: {} }] });
-        } catch(e) { console.log("İzin adımı geçildi veya tarayıcı desteklemiyor."); }
-        accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
-      }
-
+      // 2. En doğrudan hesap isteme yöntemi (Sorun çıkaran permission katmanını kaldırdık)
+      const accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
       user = accs[0];
 
       // UI Güncelleme
@@ -117,7 +106,7 @@
       
     } catch (e) {
       console.error(e);
-      st.textContent = "Bağlantı cüzdan tarafından reddedildi.";
+      st.textContent = "Bağlantı reddedildi veya tarayıcı kilitli.";
     }
   }
 
@@ -138,12 +127,11 @@
     
     try {
       st.textContent = "Cüzdan onayı bekleniyor...";
-      
       const iface = new ethers.utils.Interface(ABI);
       const txData = iface.encodeFunctionData("setMessage", [v]);
       
       const txHash = await rawEthProvider.request({
-        method: "browse" in rawEthProvider ? "eth_sendTransaction" : "eth_sendTransaction", // Güvenli RPC rotası
+        method: "eth_sendTransaction",
         params: [{
           from: user,
           to: ADDR,
@@ -161,7 +149,7 @@
       document.getElementById("msgInput").value = "";
     } catch (e) { 
       console.error(e);
-      st.textContent = "İşlem iptal edildi veya reddedildi."; 
+      st.textContent = "İşlem iptal edildi."; 
     }
   }
 
