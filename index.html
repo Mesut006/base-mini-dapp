@@ -90,12 +90,13 @@
     }
   });
 
+  // Cüzdan Bağlantı Fonksiyonu
   async function connect() {
     const st = document.getElementById("status");
     st.textContent = "Bağlantı kuruluyor...";
     
     try {
-      // 1. Yol: Farcaster Uygulaması İçi (Güvenli Kontrol)
+      // 1. Yol: Farcaster Uygulaması İçi (Mobil Frame)
       if (window.FrameSDK && window.FrameSDK.wallet) {
         rawEthProvider = await window.FrameSDK.wallet.getEthereumProvider();
       } 
@@ -103,7 +104,7 @@
       else if (window.ethereum) {
         rawEthProvider = window.ethereum;
       } 
-      // 3. Yol: Eklentisiz QR Kod Fallback
+      // 3. Yol: Eklentisiz QR Kod Fallback (Coinbase SDK)
       else {
         const cbWallet = new CoinbaseWalletSDK({
           appName: "HelloBase",
@@ -118,7 +119,6 @@
         return;
       }
 
-      // Doğrudan cüzdan adreslerini talep et
       const accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
       if (!accs || accs.length === 0) {
         st.textContent = "Bağlantı cüzdan tarafından reddedildi.";
@@ -137,6 +137,7 @@
     }
   }
 
+  // Akıllı Sözleşmeden Mesajı Okuma (Public RPC Düğümü Üzerinden)
   async function load() {
     try {
       const r = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
@@ -147,6 +148,7 @@
     }
   }
 
+  // Sözleşmeye Yeni Mesaj Gönderme (Optimistic UI Güncellemesi Dahil)
   async function send() {
     const v = document.getElementById("msgInput").value;
     const st = document.getElementById("status");
@@ -166,13 +168,17 @@
         }]
       });
 
+      // [Optimistic UI Update] RPC gecikmesini hissettirmemek için ekrandaki eski mesajı hemen yeni metinle değiştiriyoruz
+      document.getElementById("currentMsg").textContent = v;
+      
       st.textContent = "İşlem ağa başarıyla iletildi! ✅";
       addTx(txHash);
+      document.getElementById("msgInput").value = "";
       
+      // Public RPC düğümünün yeni bloğu tamamen senkronize etmesi için süreyi 5 saniyeye çektik
       setTimeout(() => {
         load();
-        document.getElementById("msgInput").value = "";
-      }, 3500);
+      }, 5000);
 
     } catch (e) { 
       console.error(e);
@@ -180,6 +186,7 @@
     }
   }
 
+  // Arayüze İşlem Linkini Ekleme
   function addTx(hash) {
     const h = document.getElementById("history");
     if(h.innerText.includes("Kayıt yok")) h.innerHTML = "";
@@ -189,9 +196,12 @@
     h.prepend(d);
   }
 
+  // Buton Tetikleyicileri
   document.getElementById("connectBtn").onclick = connect;
   document.getElementById("sendBtn").onclick = send;
   document.getElementById("refreshBtn").onclick = load;
+  
+  // İlk açılışta veriyi otomatik yükle
   load();
 </script>
 </body>
