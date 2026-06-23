@@ -6,20 +6,10 @@
   <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
   <title>HelloBase Dashboard</title>
 
-  <!-- Ethers.js ve Alternatif Bağlantı İçin Coinbase SDK -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <script src="https://unpkg.com/@coinbase/wallet-sdk@3.7.2/dist/index.js"></script>
   
-  <script type="module">
-    // Tarayıcı çökmelerini ve modül yükleme kilitlenmelerini önleyen güvenli başlatıcı
-    try {
-      const { sdk } = await import("https://esm.sh/@farcaster/frame-sdk");
-      window.fSDK = sdk;
-      await sdk.actions.ready();
-    } catch (err) {
-      console.log("Farcaster ortamı dışında çalışılıyor (Normal Tarayıcı).");
-    }
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@farcaster/frame-sdk/dist/index.js" defer></script>
 
   <style>
     :root{--bg:#020617;--card:#0f172a;--border:#1e293b;--accent:#3b82f6;--text:#f8fafc;--sub:#94a3b8;}
@@ -89,20 +79,31 @@
 
   let rawEthProvider, user;
 
+  // Farcaster Frame ortamını güvenli bir şekilde başlatan fonksiyon
+  window.addEventListener('load', () => {
+    try {
+      if (window.FrameSDK) {
+        window.FrameSDK.actions.ready().catch(() => {});
+      }
+    } catch (e) {
+      console.log("Farcaster SDK başlatılamadı, normal tarayıcı modu.");
+    }
+  });
+
   async function connect() {
     const st = document.getElementById("status");
     st.textContent = "Bağlantı kuruluyor...";
     
     try {
-      // 1. Yol: Farcaster içi cüzdan köprüsü (Mobil Frame akışı)
-      if (window.fSDK && window.fSDK.wallet) {
-        rawEthProvider = await window.fSDK.wallet.getEthereumProvider();
+      // 1. Yol: Farcaster Uygulaması İçi (Güvenli Kontrol)
+      if (window.FrameSDK && window.FrameSDK.wallet) {
+        rawEthProvider = await window.FrameSDK.wallet.getEthereumProvider();
       } 
-      // 2. Yol: Tarayıcı cüzdanı (MetaMask vb.) var mı kontrol et
+      // 2. Yol: Masaüstü Tarayıcı Eklentisi (MetaMask vb.)
       else if (window.ethereum) {
         rawEthProvider = window.ethereum;
       } 
-      // 3. Yol: Hiçbir eklenti yoksa veya kilitliyse bağımsız Coinbase SDK QR çözümü
+      // 3. Yol: Eklentisiz QR Kod Fallback
       else {
         const cbWallet = new CoinbaseWalletSDK({
           appName: "HelloBase",
@@ -117,6 +118,7 @@
         return;
       }
 
+      // Doğrudan cüzdan adreslerini talep et
       const accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
       if (!accs || accs.length === 0) {
         st.textContent = "Bağlantı cüzdan tarafından reddedildi.";
@@ -130,8 +132,8 @@
       st.textContent = "Bağlantı başarılı! ✅";
       
     } catch (e) {
-      console.error("Detaylı Bağlantı Hatası:", e);
-      st.textContent = "Bağlantı hatası: " + (e.message || "Bilinmeyen hata.");
+      console.error("Bağlantı Hatası:", e);
+      st.textContent = "Bağlantı hatası: " + (e.message || "Cüzdan kilitli veya yanıt vermedi.");
     }
   }
 
