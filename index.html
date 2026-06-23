@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Farcaster Frame v2 Meta Etiketleri -->
   <meta name="fc:frame" content='{"version":"next","imageUrl":"https://base-mini-dapp.vercel.app/og.png","button":{"title":"Launch App","action":{"type":"launch_frame","name":"HelloBase","url":"https://base-mini-dapp.vercel.app/"}}}' />
   <title>Mesut Dashboard</title>
 
+  <!-- Ethers.js Kütüphanesi -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  
+  <!-- Farcaster SDK Entegrasyonu -->
   <script type="module">
     import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
     window.fSDK = sdk;
@@ -32,6 +36,7 @@
 <body>
 
 <div class="shell">
+  <!-- Sol Panel: Akıllı Kontrat Etkileşimi -->
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div>
@@ -53,7 +58,7 @@
 
     <input type="text" id="msgInput" placeholder="Yeni mesaj...">
     <button id="sendBtn" style="width:100%;" disabled>Güncelle</button>
-    <div id="status" style="font-size:11px; margin-top:10px; text-align:center; color:var(--sub);"></div>
+    <div id="status" style="font-size:11px; margin-top:10px; text-align:center; color:var(--sub); line-height: 1.4;"></div>
 
     <div style="margin-top:20px;">
       <span style="font-size:10px; color:var(--sub);">İŞLEM GEÇMİŞİ</span>
@@ -61,6 +66,7 @@
     </div>
   </div>
 
+  <!-- Sağ Panel: Sosyal Linkler -->
   <div class="card">
     <h3 style="margin-top:0; font-size:16px;">Sosyal Bağlantılar</h3>
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
@@ -76,54 +82,52 @@
 </div>
 
 <script>
+  // Base Kontrat Bilgileri
   const ADDR = "0xD6e402b477B05f8105be4fAaC4a43E0355aCc8F8";
   const ABI = [{"inputs":[],"name":"message","outputs":[{"type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"_msg","type":"string"}],"name":"setMessage","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
   let rawEthProvider, user;
 
- async function connect() {
+  // Cüzdan Bağlantı Fonksiyonu
+  async function connect() {
     const st = document.getElementById("status");
     st.textContent = "Bağlantı kuruluyor...";
     
     try {
-      rawEthProvider = (window.fSDK && window.fSDK.wallet) ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
+      // Farcaster SDK aktif mi kontrol et, aktifse onun sağlayıcısını al, yoksa standart window.ethereum'a dön
+      const isFarcaster = !!(window.fSDK && window.fSDK.wallet);
+      rawEthProvider = isFarcaster ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
       
       if (!rawEthProvider) {
-        st.textContent = "Hata: Tarayıcıda cüzdan bulunamadı.";
+        st.innerHTML = "<span style='color:#f59e0b;'>Cüzdan bulunamadı!</span><br>Lütfen eklentinizi aktif edin veya Farcaster içi tarayıcıyı kullanın.";
         return;
       }
 
-      let accs = [];
-      try {
-        // İlk olarak eklentiyi zorlamadan halihazırda açık hesap var mı bak
-        accs = await rawEthProvider.request({ method: 'eth_accounts' });
-      } catch (innerError) {
-        console.log("Sessiz kontrol hatası, requestAccounts denenecek.");
-      }
+      // Hesapları en doğrudan RPC metoduyla talep et
+      const accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
       
       if (!accs || accs.length === 0) {
-        // Hesap yoksa pencereyi tetikle
-        accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
+        st.textContent = "Bağlantı cüzdan tarafından reddedildi.";
+        return;
       }
       
       user = accs[0];
 
-      if (!user) {
-        st.textContent = "Bağlantı reddedildi.";
-        return;
-      }
-
+      // Arayüzü Güncelle
       document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "..." + user.slice(-4);
       document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
       st.textContent = "Bağlantı başarılı! ✅";
       
     } catch (e) {
-      console.error("Cüzdan Bağlantı Hatası Detayı:", e);
-      // Kullanıcıya tarayıcıyı kilitten kurtaracak adımı yazıyoruz
-      st.innerHTML = "<span style='color:#ef4444;'>Tarayıcı Cüzdanı Kilitli!</span><br>Lütfen sağ üstten cüzdan (MetaMask) simgesine tıklayıp şifrenizi girerek cüzdanı açın, ardından sayfayı yenileyin.";
+      console.error("Detaylı Cüzdan Hatası:", e);
+      
+      // Masaüstü eklenti çökmesi/kilitlenmesi durumunda kullanıcıyı koruyan fallback mesajı
+      st.innerHTML = "<span style='color:#ef4444;'>Eklenti Yanıt Vermiyor</span><br>Tarayıcı cüzdanınız kilitlenmiş. Çözmek için:<br>1. Tarayıcıyı kapatıp tamamen yeniden açın.<br>2. Veya sayfayı bir kez <b>Gizli Sekmede</b> test edin.";
     }
   }
+
+  // Zincirden Mevcut Mesajı Okuma (Public RPC kullanarak cüzdandan bağımsız çalışır)
   async function load() {
     try {
       const r = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
@@ -134,6 +138,7 @@
     }
   }
 
+  // Zincire Yeni Mesaj Gönderme (Ham RPC işlemi - Farcaster Gaz Hatasını Çözen Yöntem)
   async function send() {
     const v = document.getElementById("msgInput").value;
     const st = document.getElementById("status");
@@ -153,7 +158,7 @@
         }]
       });
 
-      st.textContent = "İşlem ağa gönderildi...";
+      st.textContent = "İşlem ağa gönderildi, onaylanıyor...";
       const rpc = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
       await rpc.waitForTransaction(txHash);
 
@@ -163,10 +168,11 @@
       document.getElementById("msgInput").value = "";
     } catch (e) { 
       console.error(e);
-      st.textContent = "İşlem iptal edildi."; 
+      st.textContent = "İşlem iptal edildi veya reddedildi."; 
     }
   }
 
+  // Arayüze İşlem Geçmişi Ekleme
   function addTx(hash) {
     const h = document.getElementById("history");
     if(h.innerText.includes("Kayıt yok")) h.innerHTML = "";
@@ -176,9 +182,12 @@
     h.prepend(d);
   }
 
+  // Buton Olay Dinleyicileri
   document.getElementById("connectBtn").onclick = connect;
   document.getElementById("sendBtn").onclick = send;
   document.getElementById("refreshBtn").onclick = load;
+  
+  // Sayfa açıldığında kontrat verisini otomatik çek
   load();
 </script>
 </body>
