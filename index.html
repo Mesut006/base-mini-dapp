@@ -11,9 +11,14 @@
   <script src="https://unpkg.com/@coinbase/wallet-sdk@3.7.2/dist/index.js"></script>
   
   <script type="module">
-    import { sdk } from "https://esm.sh/@farcaster/frame-sdk";
-    window.fSDK = sdk;
-    sdk.actions.ready().catch(() => {});
+    // Tarayıcı çökmelerini ve modül yükleme kilitlenmelerini önleyen güvenli başlatıcı
+    try {
+      const { sdk } = await import("https://esm.sh/@farcaster/frame-sdk");
+      window.fSDK = sdk;
+      await sdk.actions.ready();
+    } catch (err) {
+      console.log("Farcaster ortamı dışında çalışılıyor (Normal Tarayıcı).");
+    }
   </script>
 
   <style>
@@ -89,11 +94,16 @@
     st.textContent = "Bağlantı kuruluyor...";
     
     try {
+      // 1. Yol: Farcaster içi cüzdan köprüsü (Mobil Frame akışı)
       if (window.fSDK && window.fSDK.wallet) {
         rawEthProvider = await window.fSDK.wallet.getEthereumProvider();
-      } else if (window.ethereum) {
+      } 
+      // 2. Yol: Tarayıcı cüzdanı (MetaMask vb.) var mı kontrol et
+      else if (window.ethereum) {
         rawEthProvider = window.ethereum;
-      } else {
+      } 
+      // 3. Yol: Hiçbir eklenti yoksa veya kilitliyse bağımsız Coinbase SDK QR çözümü
+      else {
         const cbWallet = new CoinbaseWalletSDK({
           appName: "HelloBase",
           appLogoUrl: "https://base-mini-dapp.vercel.app/og.png",
@@ -103,13 +113,13 @@
       }
       
       if (!rawEthProvider) {
-        st.textContent = "Bağlantı sağlayıcısı bulunamadı.";
+        st.textContent = "Bağlantı sağlayıcısı oluşturulamadı.";
         return;
       }
 
       const accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
       if (!accs || accs.length === 0) {
-        st.textContent = "Bağlantı reddedildi.";
+        st.textContent = "Bağlantı cüzdan tarafından reddedildi.";
         return;
       }
       
@@ -120,8 +130,8 @@
       st.textContent = "Bağlantı başarılı! ✅";
       
     } catch (e) {
-      console.error(e);
-      st.textContent = "Bağlantı hatası oluştu.";
+      console.error("Detaylı Bağlantı Hatası:", e);
+      st.textContent = "Bağlantı hatası: " + (e.message || "Bilinmeyen hata.");
     }
   }
 
@@ -154,11 +164,9 @@
         }]
       });
 
-      // UI takılmasını önlemek için doğrudan onay mesajı verip listeye ekliyoruz
       st.textContent = "İşlem ağa başarıyla iletildi! ✅";
       addTx(txHash);
       
-      // Base ağının hızı için 3.5 saniye sonra arayüzü sessizce yeniliyoruz
       setTimeout(() => {
         load();
         document.getElementById("msgInput").value = "";
