@@ -81,27 +81,28 @@
 
   let rawEthProvider, user;
 
-  async function connect() {
+ async function connect() {
     const st = document.getElementById("status");
     st.textContent = "Bağlantı kuruluyor...";
     
     try {
-      // 1. Sağlayıcı belirleme
       rawEthProvider = (window.fSDK && window.fSDK.wallet) ? await window.fSDK.wallet.getEthereumProvider() : window.ethereum;
       
       if (!rawEthProvider) {
-        st.textContent = "Hata: Cüzdan bulunamadı.";
+        st.textContent = "Hata: Tarayıcıda cüzdan bulunamadı.";
         return;
       }
 
-      // 2. Tarayıcı eklentisinin takılan listener hatasını aşmak için güvenli sorgu listesi
       let accs = [];
+      try {
+        // İlk olarak eklentiyi zorlamadan halihazırda açık hesap var mı bak
+        accs = await rawEthProvider.request({ method: 'eth_accounts' });
+      } catch (innerError) {
+        console.log("Sessiz kontrol hatası, requestAccounts denenecek.");
+      }
       
-      // Önce cüzdan zaten arka planda bağlı mı diye sessizce kontrol et (contentscript'i tetiklemez)
-      accs = await rawEthProvider.request({ method: 'eth_accounts' });
-      
-      // Eğer sessizce bağlanamadıysa, zorla hesapları iste (Pencereyi patlatır)
       if (!accs || accs.length === 0) {
+        // Hesap yoksa pencereyi tetikle
         accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
       }
       
@@ -112,16 +113,15 @@
         return;
       }
 
-      // UI Güncelleme
       document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "..." + user.slice(-4);
       document.getElementById("connectBtn").textContent = "Bağlandı";
       document.getElementById("sendBtn").disabled = false;
       st.textContent = "Bağlantı başarılı! ✅";
       
     } catch (e) {
-      console.error(e);
-      // Eğer tarayıcıda hâlâ eklenti hatası varsa kullanıcıya net bilgi verelim
-      st.textContent = "Eklenti hatası! Lütfen tarayıcıyı/eklentiyi kapatıp açın.";
+      console.error("Cüzdan Bağlantı Hatası Detayı:", e);
+      // Kullanıcıya tarayıcıyı kilitten kurtaracak adımı yazıyoruz
+      st.innerHTML = "<span style='color:#ef4444;'>Tarayıcı Cüzdanı Kilitli!</span><br>Lütfen sağ üstten cüzdan (MetaMask) simgesine tıklayıp şifrenizi girerek cüzdanı açın, ardından sayfayı yenileyin.";
     }
   }
   async function load() {
