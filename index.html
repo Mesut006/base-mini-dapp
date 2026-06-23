@@ -83,7 +83,7 @@
 
   async function connect() {
     const st = document.getElementById("status");
-    st.textContent = "Bağlantı isteniyor...";
+    st.textContent = "Bağlantı kuruluyor...";
     
     try {
       // 1. Sağlayıcı belirleme
@@ -94,9 +94,23 @@
         return;
       }
 
-      // 2. En doğrudan hesap isteme yöntemi (Sorun çıkaran permission katmanını kaldırdık)
-      const accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
+      // 2. Tarayıcı eklentisinin takılan listener hatasını aşmak için güvenli sorgu listesi
+      let accs = [];
+      
+      // Önce cüzdan zaten arka planda bağlı mı diye sessizce kontrol et (contentscript'i tetiklemez)
+      accs = await rawEthProvider.request({ method: 'eth_accounts' });
+      
+      // Eğer sessizce bağlanamadıysa, zorla hesapları iste (Pencereyi patlatır)
+      if (!accs || accs.length === 0) {
+        accs = await rawEthProvider.request({ method: 'eth_requestAccounts' });
+      }
+      
       user = accs[0];
+
+      if (!user) {
+        st.textContent = "Bağlantı reddedildi.";
+        return;
+      }
 
       // UI Güncelleme
       document.getElementById("addrBox").textContent = "Cüzdan: " + user.slice(0,6) + "..." + user.slice(-4);
@@ -106,10 +120,10 @@
       
     } catch (e) {
       console.error(e);
-      st.textContent = "Bağlantı reddedildi veya tarayıcı kilitli.";
+      // Eğer tarayıcıda hâlâ eklenti hatası varsa kullanıcıya net bilgi verelim
+      st.textContent = "Eklenti hatası! Lütfen tarayıcıyı/eklentiyi kapatıp açın.";
     }
   }
-
   async function load() {
     try {
       const r = new ethers.providers.JsonRpcProvider("https://base-rpc.publicnode.com");
